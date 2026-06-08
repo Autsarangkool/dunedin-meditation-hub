@@ -53,11 +53,11 @@ export default function MembersPage() {
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b bg-[#f7f3ea]">
+                <th className="p-3">รูป / Photo</th>
                 <th className="p-3">ชื่อ / Name</th>
                 <th className="p-3">ชื่อเล่น / Nickname</th>
                 <th className="p-3">โทร / Phone</th>
                 <th className="p-3">อีเมล / Email</th>
-                <th className="p-3">รูป</th>
                 <th className="p-3">จัดการ / Action</th>
               </tr>
             </thead>
@@ -65,29 +65,31 @@ export default function MembersPage() {
             <tbody>
               {filteredMembers.map((member) => (
                 <tr key={member.id} className="border-b">
-                    <td className="p-3">
-  {member.profile_photo_url ? (
-    <img
-      src={member.profile_photo_url}
-      alt=""
-      className="w-12 h-12 rounded-full object-cover"
-    />
-  ) : (
-    "-"
-  )}
-</td>
-                  <td className="p-3">{member.full_name}</td>
-                  <td className="p-3">{member.nickname}</td>
-                  <td className="p-3">{member.phone}</td>
-                  <td className="p-3">{member.email}</td>
-<td className="p-3">
-  <a
-    href={`/members/${member.id}`}
-    className="rounded-lg bg-green-700 px-3 py-2 text-white"
-  >
-    ดูข้อมูล
-  </a>
-</td>
+                  <td className="p-3">
+                    {member.profile_photo_url ? (
+                      <img
+                        src={member.profile_photo_url}
+                        alt={member.full_name || ""}
+                        className="h-12 w-12 rounded-full object-cover"
+                      />
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+
+                  <td className="p-3">{member.full_name || "-"}</td>
+                  <td className="p-3">{member.nickname || "-"}</td>
+                  <td className="p-3">{member.phone || "-"}</td>
+                  <td className="p-3">{member.email || "-"}</td>
+
+                  <td className="p-3">
+                    <a
+                      href={`/members/${member.id}`}
+                      className="rounded-lg bg-green-700 px-3 py-2 text-white"
+                    >
+                      ดูข้อมูล
+                    </a>
+                  </td>
                 </tr>
               ))}
             </tbody>
