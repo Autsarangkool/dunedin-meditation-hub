@@ -19,7 +19,7 @@ export default function RegisterPage() {
       const fileName = `${Date.now()}-${photoFile.name}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("profile-photos")
+        .from("PROFILE-PHOTOS")
         .upload(fileName, photoFile);
 
       if (uploadError) {
@@ -29,7 +29,7 @@ export default function RegisterPage() {
       }
 
       const { data } = supabase.storage
-        .from("profile-photos")
+        .from("PROFILE-PHOTOS")
         .getPublicUrl(fileName);
 
       profilePhotoUrl = data.publicUrl;
