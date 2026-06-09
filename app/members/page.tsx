@@ -1,15 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function MembersPage() {
+  const router = useRouter();
+
   const [members, setMembers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    loadMembers();
-  }, []);
+  const admin = localStorage.getItem("admin");
+
+  if (!admin) {
+    router.push("/login");
+    return;
+  }
+
+  loadMembers();
+}, [router]);
 
   async function loadMembers() {
     const { data } = await supabase
