@@ -69,6 +69,8 @@ export default function RegisterPage() {
         gender: formData.get("gender"),
         birth_date: convertDateToISO(formData.get("birth_date") as string),
         age: formData.get("age"),
+        ? Number(formData.get("age"))
+  : null,
         phone: formData.get("phone"),
         email: formData.get("email"),
         line_id: formData.get("line_id"),
