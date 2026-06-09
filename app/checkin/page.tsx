@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 export default function CheckinPage() {
@@ -9,6 +10,7 @@ export default function CheckinPage() {
   const [todayCheckins, setTodayCheckins] = useState<any[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState("");
   const [search, setSearch] = useState("");
+  const [latestCheckin, setLatestCheckin] = useState<any>(null);
 
   useEffect(() => {
     loadMembers();
@@ -58,6 +60,10 @@ export default function CheckinPage() {
       .order("checkin_time", { ascending: false });
 
     setTodayCheckins(data || []);
+
+    if (data && data.length > 0) {
+      setLatestCheckin(data[0]);
+    }
   }
 
   function alreadyCheckedIn(memberId: string) {
@@ -68,7 +74,7 @@ export default function CheckinPage() {
     return sessions.find((session) => session.id === selectedSessionId);
   }
 
-  async function handleCheckin(memberId: string) {
+  async function handleCheckin(member: any) {
     const session = selectedSession();
 
     if (!session) {
@@ -76,29 +82,35 @@ export default function CheckinPage() {
       return;
     }
 
-    if (alreadyCheckedIn(memberId)) {
+    if (alreadyCheckedIn(member.id)) {
       alert("สมาชิกคนนี้เช็คอิน Session นี้แล้ว / Already checked in this session");
       return;
     }
 
-    const { error } = await supabase.from("checkins").insert({
-      member_id: memberId,
-      session_id: session.id,
-      session_name: session.session_name,
-      checkin_date: getToday(),
-    });
+    const { data, error } = await supabase
+      .from("checkins")
+      .insert({
+        member_id: member.id,
+        session_id: session.id,
+        session_name: session.session_name,
+        checkin_date: getToday(),
+      })
+      .select("*, members(*), sessions(*)")
+      .single();
 
     if (error) {
       alert(error.message);
       return;
     }
 
-    alert("เช็คอินสำเร็จ / Check-in successful");
-    loadTodayCheckins();
+    setLatestCheckin(data);
+    await loadTodayCheckins();
   }
 
   const filteredMembers = members.filter((member) =>
-    `${member.full_name} ${member.nickname} ${member.phone} ${member.email}`
+    `${member.full_name || ""} ${member.nickname || ""} ${member.phone || ""} ${
+      member.email || ""
+    }`
       .toLowerCase()
       .includes(search.toLowerCase())
   );
@@ -126,10 +138,28 @@ export default function CheckinPage() {
           >
             {sessions.map((session) => (
               <option key={session.id} value={session.id}>
-                {session.session_name} {session.session_number ? `(${session.session_number})` : ""} - {session.event_date || ""}
+                {session.session_name}{" "}
+                {session.session_number ? `(${session.session_number})` : ""} -{" "}
+                {session.event_date || ""}
               </option>
             ))}
           </select>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/sessions"
+              className="rounded-xl bg-green-700 px-5 py-3 font-semibold text-white hover:bg-green-800"
+            >
+              + สร้างรุ่นใหม่ / Create New Session
+            </Link>
+
+            <button
+              onClick={loadSessions}
+              className="rounded-xl border px-5 py-3 font-semibold text-[#4b5f4a] hover:bg-[#f7f3ea]"
+            >
+              โหลด Session ใหม่ / Refresh
+            </button>
+          </div>
 
           {sessions.length === 0 && (
             <p className="mt-3 text-sm text-red-600">
@@ -168,7 +198,9 @@ export default function CheckinPage() {
                           className="h-12 w-12 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="h-12 w-12 rounded-full bg-gray-200" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-xl">
+                          🙏
+                        </div>
                       )}
 
                       <div>
@@ -180,12 +212,12 @@ export default function CheckinPage() {
                     </div>
 
                     <button
-                      onClick={() => handleCheckin(member.id)}
+                      onClick={() => handleCheckin(member)}
                       disabled={checked || !selectedSessionId}
                       className={
                         checked || !selectedSessionId
                           ? "rounded-lg bg-gray-300 px-4 py-2 text-gray-600"
-                          : "rounded-lg bg-green-700 px-4 py-2 text-white"
+                          : "rounded-lg bg-green-700 px-4 py-2 text-white hover:bg-green-800"
                       }
                     >
                       {checked ? "เช็คอินแล้ว" : "Check-in"}
@@ -198,46 +230,107 @@ export default function CheckinPage() {
 
           <section className="rounded-2xl border border-[#e5dfcf] bg-[#fffdf8] p-6">
             <h2 className="text-xl font-semibold text-[#4b5f4a]">
-              เช็คอิน Session นี้ / Session Check-ins
+              เช็คอินล่าสุด / Latest Check-in
             </h2>
 
-            <p className="mt-2 text-gray-600">
-              รวมทั้งหมด / Total: {todayCheckins.length} คน
-            </p>
+            {latestCheckin ? (
+              <div className="mt-4 rounded-3xl border border-green-200 bg-green-50 p-8 text-center shadow-lg">
+                <div className="mb-3 text-6xl">✅</div>
 
-            <div className="mt-4 space-y-3">
-              {todayCheckins.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3 rounded-xl border bg-white p-3"
-                >
-                  {item.members?.profile_photo_url ? (
+                <div className="mx-auto mb-4 h-40 w-40 overflow-hidden rounded-full border-4 border-green-300 bg-white">
+                  {latestCheckin.members?.profile_photo_url ? (
                     <img
-                      src={item.members.profile_photo_url}
+                      src={latestCheckin.members.profile_photo_url}
                       alt=""
-                      className="h-10 w-10 rounded-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="h-10 w-10 rounded-full bg-gray-200" />
+                    <div className="flex h-full w-full items-center justify-center text-6xl">
+                      🙏
+                    </div>
                   )}
-
-                  <div>
-                    <p className="font-medium">
-                      {item.members?.full_name || "-"}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {item.sessions?.session_name || item.session_name} •{" "}
-                      {new Date(item.checkin_time).toLocaleTimeString()}
-                    </p>
-                  </div>
                 </div>
-              ))}
 
-              {todayCheckins.length === 0 && (
-                <p className="text-gray-500">
-                  ยังไม่มีคนเช็คอิน Session นี้ / No check-ins for this session
+                <h3 className="text-3xl font-bold text-gray-900">
+                  {latestCheckin.members?.full_name || "-"}
+                </h3>
+
+                <p className="mt-2 text-xl text-gray-600">
+                  {latestCheckin.members?.nickname ||
+                    latestCheckin.members?.phone ||
+                    ""}
                 </p>
-              )}
+
+                <p className="mt-5 text-2xl font-semibold text-green-700">
+                  เช็คอินสำเร็จ / Check-in Successful
+                </p>
+
+                <p className="mt-3 text-lg text-gray-600">
+                  {latestCheckin.sessions?.session_name ||
+                    latestCheckin.session_name}
+                </p>
+
+                <p className="mt-1 text-gray-500">
+                  {latestCheckin.checkin_time
+                    ? new Date(latestCheckin.checkin_time).toLocaleTimeString()
+                    : ""}
+                </p>
+              </div>
+            ) : (
+              <div className="mt-4 rounded-3xl border bg-white p-8 text-center text-gray-500">
+                <div className="mb-3 text-6xl">🙏</div>
+                <p className="text-xl font-semibold">รอการเช็คอินล่าสุด</p>
+                <p className="mt-1">เมื่อเช็คอินสำเร็จ จะแสดงตรงนี้แบบใหญ่</p>
+              </div>
+            )}
+
+            <div className="mt-6">
+              <h3 className="font-semibold text-[#4b5f4a]">
+                รายชื่อที่เช็คอินแล้ว / Session Check-ins
+              </h3>
+
+              <p className="mt-1 text-gray-600">
+                รวมทั้งหมด / Total: {todayCheckins.length} คน
+              </p>
+
+              <div className="mt-4 max-h-[260px] space-y-3 overflow-y-auto">
+                {todayCheckins.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-xl border bg-white p-3"
+                  >
+                    {item.members?.profile_photo_url ? (
+                      <img
+                        src={item.members.profile_photo_url}
+                        alt=""
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+                        🙏
+                      </div>
+                    )}
+
+                    <div>
+                      <p className="font-medium">
+                        {item.members?.full_name || "-"}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {item.sessions?.session_name || item.session_name} •{" "}
+                        {item.checkin_time
+                          ? new Date(item.checkin_time).toLocaleTimeString()
+                          : ""}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+
+                {todayCheckins.length === 0 && (
+                  <p className="text-gray-500">
+                    ยังไม่มีคนเช็คอิน Session นี้ / No check-ins for this session
+                  </p>
+                )}
+              </div>
             </div>
           </section>
         </div>
