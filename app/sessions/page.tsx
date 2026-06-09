@@ -3,225 +3,203 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function CheckinPage() {
-  const [members, setMembers] = useState<any[]>([]);
+export default function SessionsPage() {
   const [sessions, setSessions] = useState<any[]>([]);
-  const [checkins, setCheckins] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
-
-  const [selectedMemberId, setSelectedMemberId] = useState("");
-  const [selectedSessionId, setSelectedSessionId] = useState("");
-  const [checkinDate, setCheckinDate] = useState(getToday());
-  const [checkinTime, setCheckinTime] = useState(getNowTime());
+  const [sessionName, setSessionName] = useState("");
+  const [sessionNumber, setSessionNumber] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadMembers();
     loadSessions();
-    loadCheckins();
   }, []);
 
-  function getToday() {
-    return new Date().toISOString().split("T")[0];
-  }
-
-  function getNowTime() {
-    return new Date().toTimeString().slice(0, 5);
-  }
-
-  async function loadMembers() {
-    const { data } = await supabase
-      .from("members")
-      .select("*")
-      .order("full_name");
-
-    setMembers(data || []);
-  }
-
   async function loadSessions() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("sessions")
       .select("*")
       .order("event_date", { ascending: false });
 
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
     setSessions(data || []);
-
-    if (data?.length) {
-      setSelectedSessionId(data[0].id);
-    }
   }
 
-  async function loadCheckins() {
-    const { data } = await supabase
-      .from("checkins")
-      .select("*, members(*), sessions(*)")
-      .order("checkin_time", { ascending: false });
-
-    setCheckins(data || []);
+  function resetForm() {
+    setSessionName("");
+    setSessionNumber("");
+    setEventDate("");
+    setEditingId(null);
   }
 
-  async function addManualCheckin() {
-    if (!selectedMemberId) {
-      alert("กรุณาเลือกสมาชิก");
+  function generateNextSessionNumber() {
+    const numbers = sessions
+      .map((s) => s.session_number)
+      .filter(Boolean)
+      .map((num) => Number(String(num).replace("R", "")))
+      .filter((num) => !isNaN(num));
+
+    const next = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
+    return `R${String(next).padStart(3, "0")}`;
+  }
+
+  async function saveSession() {
+    if (!sessionName || !eventDate) {
+      alert("กรุณากรอกชื่อรุ่นและวันที่");
       return;
     }
 
-    const checkinDateTime = `${checkinDate}T${checkinTime}:00`;
+    const finalSessionNumber =
+      sessionNumber.trim() || generateNextSessionNumber();
 
-    const { error } = await supabase.from("checkins").insert({
-      member_id: selectedMemberId,
-      session_id: selectedSessionId || null,
-      checkin_date: checkinDate,
-      checkin_time: checkinDateTime,
-      session_name:
-        sessions.find((s) => s.id === selectedSessionId)?.session_name ||
-        "Manual Check-in",
-    });
+    if (editingId) {
+      const { error } = await supabase
+        .from("sessions")
+        .update({
+          session_name: sessionName,
+          session_number: finalSessionNumber,
+          event_date: eventDate,
+        })
+        .eq("id", editingId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+    } else {
+      const { error } = await supabase.from("sessions").insert({
+        session_name: sessionName,
+        session_number: finalSessionNumber,
+        event_date: eventDate,
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+    }
+
+    resetForm();
+    loadSessions();
+  }
+
+  function editSession(session: any) {
+    setEditingId(session.id);
+    setSessionName(session.session_name || "");
+    setSessionNumber(session.session_number || "");
+    setEventDate(session.event_date || "");
+  }
+
+  async function deleteSession(id: string) {
+    if (!confirm("ต้องการลบรุ่นนี้ใช่ไหม?")) return;
+
+    const { error } = await supabase.from("sessions").delete().eq("id", id);
 
     if (error) {
       alert(error.message);
       return;
     }
 
-    alert("เพิ่มเช็คอินย้อนหลังสำเร็จ");
-    setSelectedMemberId("");
-    setCheckinDate(getToday());
-    setCheckinTime(getNowTime());
-    loadCheckins();
+    loadSessions();
   }
-
-  async function deleteCheckin(id: string) {
-    if (!confirm("ต้องการลบรายการเช็คอินนี้ใช่ไหม?")) return;
-
-    const { error } = await supabase.from("checkins").delete().eq("id", id);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    loadCheckins();
-  }
-
-  const filteredMembers = members.filter((member) =>
-    `${member.full_name || ""} ${member.nickname || ""} ${member.phone || ""} ${
-      member.email || ""
-    }`
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
 
   return (
     <main className="min-h-screen bg-[#f7f3ea] p-6">
-      <div className="mx-auto max-w-6xl rounded-3xl bg-white p-8 shadow-md">
+      <div className="mx-auto max-w-5xl rounded-3xl bg-white p-8 shadow-md">
         <h1 className="text-3xl font-bold text-[#4b5f4a]">
-          Check-in Management
+          จัดการรุ่น / Session Management
         </h1>
 
         <section className="mt-6 rounded-2xl border bg-[#fffdf8] p-6">
           <h2 className="text-xl font-semibold text-[#4b5f4a]">
-            เพิ่มเช็คอินย้อนหลัง / Manual Backdate Check-in
+            {editingId ? "แก้ไขรุ่น" : "สร้างรุ่นใหม่"}
           </h2>
 
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="ค้นหาสมาชิก"
-            className="mt-4 w-full rounded-xl border p-3"
-          />
-
-          <select
-            value={selectedMemberId}
-            onChange={(e) => setSelectedMemberId(e.target.value)}
-            className="mt-4 w-full rounded-xl border p-3"
-          >
-            <option value="">เลือกสมาชิก</option>
-            {filteredMembers.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.full_name} {member.nickname ? `(${member.nickname})` : ""}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={selectedSessionId}
-            onChange={(e) => setSelectedSessionId(e.target.value)}
-            className="mt-4 w-full rounded-xl border p-3"
-          >
-            <option value="">ไม่ระบุ Session</option>
-            {sessions.map((session) => (
-              <option key={session.id} value={session.id}>
-                {session.session_name} - {session.event_date}
-              </option>
-            ))}
-          </select>
-
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
             <input
-              type="date"
-              value={checkinDate}
-              onChange={(e) => setCheckinDate(e.target.value)}
+              value={sessionName}
+              onChange={(e) => setSessionName(e.target.value)}
+              placeholder="ชื่อรุ่น เช่น ครั้งที่ 2"
               className="rounded-xl border p-3"
             />
 
             <input
-              type="time"
-              value={checkinTime}
-              onChange={(e) => setCheckinTime(e.target.value)}
+              value={sessionNumber}
+              onChange={(e) => setSessionNumber(e.target.value)}
+              placeholder={`รหัส เช่น ${generateNextSessionNumber()}`}
+              className="rounded-xl border p-3"
+            />
+
+            <input
+              type="date"
+              value={eventDate}
+              onChange={(e) => setEventDate(e.target.value)}
               className="rounded-xl border p-3"
             />
           </div>
 
-          <button
-            onClick={addManualCheckin}
-            className="mt-4 rounded-lg bg-green-700 px-5 py-3 text-white"
-          >
-            เพิ่มเช็คอินย้อนหลัง
-          </button>
+          <div className="mt-4 flex gap-3">
+            <button
+              onClick={saveSession}
+              className="rounded-xl bg-green-700 px-6 py-3 font-semibold text-white hover:bg-green-800"
+            >
+              {editingId ? "บันทึกการแก้ไข" : "+ สร้างรุ่นใหม่"}
+            </button>
+
+            {editingId && (
+              <button
+                onClick={resetForm}
+                className="rounded-xl border px-6 py-3 font-semibold"
+              >
+                ยกเลิก
+              </button>
+            )}
+          </div>
         </section>
 
         <section className="mt-8">
           <h2 className="text-xl font-semibold text-[#4b5f4a]">
-            รายการเช็คอินทั้งหมด
+            รายการรุ่นทั้งหมด
           </h2>
 
           <div className="mt-4 space-y-3">
-            {checkins.map((item) => (
+            {sessions.map((session) => (
               <div
-                key={item.id}
+                key={session.id}
                 className="flex items-center justify-between rounded-xl border bg-[#fffdf8] p-4"
               >
                 <div>
-                  <p className="font-semibold">
-                    {item.members?.full_name || "-"}
+                  <p className="text-lg font-semibold">
+                    {session.session_name}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Session:{" "}
-                    {item.sessions?.session_name ||
-                      item.session_name ||
-                      "ไม่ระบุ"}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    วันที่: {item.checkin_date || "-"}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    เวลา:{" "}
-                    {item.checkin_time
-                      ? new Date(item.checkin_time).toLocaleTimeString()
-                      : "-"}
+                    {session.session_number || "-"} · {session.event_date || "-"}
                   </p>
                 </div>
 
-                <button
-                  onClick={() => deleteCheckin(item.id)}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-white"
-                >
-                  Delete
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => editSession(session)}
+                    className="rounded-lg bg-yellow-500 px-4 py-2 text-white"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => deleteSession(session.id)}
+                    className="rounded-lg bg-red-600 px-4 py-2 text-white"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
 
-            {checkins.length === 0 && (
-              <p className="text-gray-500">ยังไม่มีรายการเช็คอิน</p>
+            {sessions.length === 0 && (
+              <p className="text-gray-500">ยังไม่มีรุ่น / No sessions yet</p>
             )}
           </div>
         </section>
