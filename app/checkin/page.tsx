@@ -153,6 +153,13 @@ export default function CheckinPage() {
               + สร้างรุ่นใหม่ / Create New Session
             </Link>
 
+            <Link
+              href="/checkin/manual"
+              className="rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800"
+            >
+              + เพิ่มเช็คอินย้อนหลัง
+            </Link>
+
             <button
               onClick={loadSessions}
               className="rounded-xl border px-5 py-3 font-semibold text-[#4b5f4a] hover:bg-[#f7f3ea]"
