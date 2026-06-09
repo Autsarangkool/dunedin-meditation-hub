@@ -3,6 +3,16 @@
 import { supabase } from "@/lib/supabase";
 
 export default function RegisterPage() {
+  function convertDateToISO(dateText: string) {
+    if (!dateText) return null;
+
+    const [day, month, year] = dateText.split("/");
+
+    if (!day || !month || !year) return null;
+
+    return `${year}-${month}-${day}`;
+  }
+
   async function handleSubmit(e: any) {
     e.preventDefault();
 
@@ -13,7 +23,7 @@ export default function RegisterPage() {
       full_name: formData.get("full_name"),
       nickname: formData.get("nickname"),
       gender: formData.get("gender"),
-      birth_date: formData.get("birth_date"),
+      birth_date: convertDateToISO(formData.get("birth_date") as string),
       age: formData.get("age"),
       phone: formData.get("phone"),
       email: formData.get("email"),
@@ -64,17 +74,14 @@ export default function RegisterPage() {
             <option value="other">อื่น ๆ / Other</option>
           </select>
 
-          <div>
-            <label className="mb-1 block text-sm text-gray-600">
-              วันเกิด / Date of Birth (DD/MM/YYYY)
-            </label>
-            <input
-              name="birth_date"
-              type="date"
-              lang="en-NZ"
-              className="w-full rounded-lg border p-3"
-            />
-          </div>
+          <input
+            name="birth_date"
+            type="text"
+            inputMode="numeric"
+            placeholder="วันเกิด DD/MM/YYYY เช่น 02/04/1995"
+            pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$"
+            className="rounded-lg border p-3"
+          />
 
           <input
             name="age"
