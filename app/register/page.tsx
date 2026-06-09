@@ -1,16 +1,54 @@
 "use client";
 
+import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function RegisterPage() {
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState("");
+
   function convertDateToISO(dateText: string) {
     if (!dateText) return null;
 
     const [day, month, year] = dateText.split("/");
-
     if (!day || !month || !year) return null;
 
     return `${year}-${month}-${day}`;
+  }
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+
+    if (!file) {
+      setPhotoFile(null);
+      setPhotoPreview("");
+      return;
+    }
+
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  }
+
+  async function uploadProfilePhoto() {
+    if (!photoFile) return null;
+
+    const fileExt = photoFile.name.split(".").pop();
+    const fileName = `member-${Date.now()}.${fileExt}`;
+    const filePath = `profiles/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from("member-photos")
+      .upload(filePath, photoFile);
+
+    if (error) {
+      throw error;
+    }
+
+    const { data } = supabase.storage
+      .from("member-photos")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
   }
 
   async function handleSubmit(e: any) {
@@ -19,31 +57,41 @@ export default function RegisterPage() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    const payload = {
-      full_name: formData.get("full_name"),
-      nickname: formData.get("nickname"),
-      gender: formData.get("gender"),
-      birth_date: convertDateToISO(formData.get("birth_date") as string),
-      age: formData.get("age"),
-      phone: formData.get("phone"),
-      email: formData.get("email"),
-      line_id: formData.get("line_id"),
-      occupation: formData.get("occupation"),
-      referral_source: formData.get("referral_source"),
-      sitting_preference: formData.get("sitting_preference"),
-      meditation_preference: formData.get("meditation_preference"),
-      health_concern: formData.get("health_concern"),
-    };
+    try {
+      const profilePhotoUrl = await uploadProfilePhoto();
 
-    const { error } = await supabase.from("members").insert(payload);
+      const payload = {
+        full_name: formData.get("full_name"),
+        nickname: formData.get("nickname"),
+        gender: formData.get("gender"),
+        birth_date: convertDateToISO(formData.get("birth_date") as string),
+        age: formData.get("age"),
+        phone: formData.get("phone"),
+        email: formData.get("email"),
+        line_id: formData.get("line_id"),
+        address: formData.get("address"),
+        occupation: formData.get("occupation"),
+        referral_source: formData.get("referral_source"),
+        sitting_preference: formData.get("sitting_preference"),
+        meditation_preference: formData.get("meditation_preference"),
+        health_concern: formData.get("health_concern"),
+        profile_photo_url: profilePhotoUrl,
+      };
 
-    if (error) {
-      alert(error.message);
-      return;
+      const { error } = await supabase.from("members").insert(payload);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      alert("ลงทะเบียนสำเร็จ / Registration successful");
+      form.reset();
+      setPhotoFile(null);
+      setPhotoPreview("");
+    } catch (error: any) {
+      alert(error.message || "Upload failed");
     }
-
-    alert("ลงทะเบียนสำเร็จ / Registration successful");
-    form.reset();
   }
 
   return (
@@ -54,6 +102,33 @@ export default function RegisterPage() {
         </h1>
 
         <form onSubmit={handleSubmit} className="mt-8 grid gap-4 md:grid-cols-2">
+          <div className="md:col-span-2 rounded-2xl border bg-[#fffdf8] p-5">
+            <label className="font-semibold text-[#4b5f4a]">
+              รูปโปรไฟล์ / Profile Photo
+            </label>
+
+            <div className="mt-4 flex items-center gap-4">
+              <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-gray-200">
+                {photoPreview ? (
+                  <img
+                    src={photoPreview}
+                    alt="Profile preview"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-4xl">🙏</span>
+                )}
+              </div>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="rounded-lg border p-3"
+              />
+            </div>
+          </div>
+
           <input
             name="full_name"
             className="rounded-lg border p-3"
@@ -108,6 +183,13 @@ export default function RegisterPage() {
             name="line_id"
             className="rounded-lg border p-3"
             placeholder="Line ID"
+          />
+
+          <textarea
+            name="address"
+            className="rounded-lg border p-3 md:col-span-2"
+            placeholder="ที่อยู่ / Address"
+            rows={3}
           />
 
           <input
