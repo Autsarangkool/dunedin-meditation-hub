@@ -5,62 +5,102 @@ import { supabase } from "@/lib/supabase";
 
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<any[]>([]);
-  const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const [form, setForm] = useState({
+    session_name: "",
+    session_number: "",
+    event_date: "",
+    start_time: "",
+    end_time: "",
+    location: "",
+    notes: "",
+  });
 
   useEffect(() => {
     loadSessions();
   }, []);
 
   async function loadSessions() {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("sessions")
       .select("*")
       .order("event_date", { ascending: false });
 
-    if (error) {
-      console.error(error);
-      return;
-    }
-
     setSessions(data || []);
   }
 
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
-    event.preventDefault();
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  }
 
-    setSaving(true);
+  function resetForm() {
+    setEditingId(null);
+    setForm({
+      session_name: "",
+      session_number: "",
+      event_date: "",
+      start_time: "",
+      end_time: "",
+      location: "",
+      notes: "",
+    });
+  }
 
-    const formData = new FormData(event.currentTarget);
-
-    const { error } = await supabase
-      .from("sessions")
-      .insert({
-        session_name: formData.get("session_name"),
-        session_number: formData.get("session_number"),
-        event_date: formData.get("event_date"),
-        start_time: formData.get("start_time"),
-        end_time: formData.get("end_time"),
-        location: formData.get("location"),
-        notes: formData.get("notes"),
-      });
-
-    setSaving(false);
-
-    if (error) {
-      alert(error.message);
-      console.error(error);
+  async function saveSession() {
+    if (!form.session_name || !form.event_date) {
+      alert("กรุณากรอกชื่อ Session และวันที่");
       return;
     }
 
-    alert("สร้าง Session สำเร็จ");
+    if (editingId) {
+      const { error } = await supabase
+        .from("sessions")
+        .update(form)
+        .eq("id", editingId);
 
-    await loadSessions();
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      alert("แก้ไข Session สำเร็จ");
+    } else {
+      const { error } = await supabase.from("sessions").insert(form);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      alert("สร้าง Session สำเร็จ");
+    }
+
+    resetForm();
+    loadSessions();
+  }
+
+  function editSession(session: any) {
+    setEditingId(session.id);
+    setForm({
+      session_name: session.session_name || "",
+      session_number: session.session_number || "",
+      event_date: session.event_date || "",
+      start_time: session.start_time || "",
+      end_time: session.end_time || "",
+      location: session.location || "",
+      notes: session.notes || "",
+    });
   }
 
   async function deleteSession(id: string) {
-    if (!confirm("ลบ Session นี้?")) return;
+    const ok = confirm("ต้องการลบ Session นี้ใช่ไหม?");
+    if (!ok) return;
 
     const { error } = await supabase
       .from("sessions")
@@ -72,128 +112,136 @@ export default function SessionsPage() {
       return;
     }
 
+    alert("ลบ Session สำเร็จ");
     loadSessions();
   }
 
   return (
     <main className="min-h-screen bg-[#f7f3ea] p-6">
-      <div className="mx-auto max-w-6xl rounded-3xl bg-white p-8 shadow-md">
+      <div className="mx-auto max-w-5xl rounded-3xl bg-white p-8 shadow-md">
         <h1 className="text-3xl font-bold text-[#4b5f4a]">
           Session Management
         </h1>
 
-        <form
-          onSubmit={handleSubmit}
-          className="mt-8 grid gap-4 md:grid-cols-2"
-        >
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
           <input
             name="session_name"
-            placeholder="Session Name"
-            required
+            value={form.session_name}
+            onChange={handleChange}
+            placeholder="ชื่อ Session"
             className="rounded-xl border p-3"
           />
 
           <input
             name="session_number"
-            placeholder="Session Number"
+            value={form.session_number}
+            onChange={handleChange}
+            placeholder="เลข Session เช่น R001"
             className="rounded-xl border p-3"
           />
 
           <input
             type="date"
             name="event_date"
-            required
+            value={form.event_date}
+            onChange={handleChange}
             className="rounded-xl border p-3"
           />
 
           <input
             type="time"
             name="start_time"
+            value={form.start_time}
+            onChange={handleChange}
             className="rounded-xl border p-3"
           />
 
           <input
             type="time"
             name="end_time"
+            value={form.end_time}
+            onChange={handleChange}
             className="rounded-xl border p-3"
           />
 
           <input
             name="location"
-            placeholder="Location"
+            value={form.location}
+            onChange={handleChange}
+            placeholder="สถานที่"
             className="rounded-xl border p-3"
           />
+        </div>
 
-          <textarea
-            name="notes"
-            placeholder="Notes"
-            rows={3}
-            className="rounded-xl border p-3 md:col-span-2"
-          />
+        <textarea
+          name="notes"
+          value={form.notes}
+          onChange={handleChange}
+          placeholder="Notes"
+          className="mt-4 w-full rounded-xl border p-3"
+        />
 
+        <div className="mt-4 flex gap-3">
           <button
-            type="submit"
-            disabled={saving}
-            className="rounded-xl bg-green-700 px-6 py-3 text-white"
+            onClick={saveSession}
+            className="rounded-lg bg-green-700 px-5 py-3 text-white"
           >
-            {saving ? "Saving..." : "Create Session"}
+            {editingId ? "Save Changes" : "Create Session"}
           </button>
-        </form>
 
-        <div className="mt-10">
-          <h2 className="text-2xl font-bold text-[#4b5f4a]">
-            All Sessions
-          </h2>
+          {editingId && (
+            <button
+              onClick={resetForm}
+              className="rounded-lg bg-gray-500 px-5 py-3 text-white"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
 
-          <div className="mt-4 space-y-4">
-            {sessions.map((session) => (
-              <div
-                key={session.id}
-                className="rounded-2xl border bg-[#fffdf8] p-5"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-xl font-semibold">
-                      {session.session_name}
-                    </h3>
+        <h2 className="mt-10 text-2xl font-bold text-[#4b5f4a]">
+          All Sessions
+        </h2>
 
-                    <p>
-                      รุ่น: {session.session_number || "-"}
-                    </p>
-
-                    <p>
-                      วันที่: {session.event_date}
-                    </p>
-
-                    <p>
-                      เวลา: {session.start_time} - {session.end_time}
-                    </p>
-
-                    <p>
-                      สถานที่: {session.location}
-                    </p>
-
-                    <p className="mt-2 text-gray-600">
-                      {session.notes}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => deleteSession(session.id)}
-                    className="rounded-lg bg-red-600 px-4 py-2 text-white"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {sessions.length === 0 && (
-              <p className="text-gray-500">
-                ยังไม่มี Session
+        <div className="mt-4 space-y-4">
+          {sessions.map((session) => (
+            <div
+              key={session.id}
+              className="rounded-xl border border-[#e5dfcf] bg-[#fffdf8] p-4"
+            >
+              <p className="font-bold text-[#4b5f4a]">
+                {session.session_name}
               </p>
-            )}
-          </div>
+
+              <p>เลข Session: {session.session_number || "-"}</p>
+              <p>วันที่: {session.event_date || "-"}</p>
+              <p>
+                เวลา: {session.start_time || "-"} - {session.end_time || "-"}
+              </p>
+              <p>สถานที่: {session.location || "-"}</p>
+              <p className="text-gray-600">{session.notes || ""}</p>
+
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={() => editSession(session)}
+                  className="rounded-lg bg-yellow-600 px-4 py-2 text-white"
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => deleteSession(session.id)}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-white"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {sessions.length === 0 && (
+            <p className="text-gray-500">ยังไม่มี Session</p>
+          )}
         </div>
       </div>
     </main>
