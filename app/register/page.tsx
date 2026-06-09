@@ -38,7 +38,10 @@ export default function RegisterPage() {
 
     const { error } = await supabase.storage
       .from("member-photos")
-      .upload(filePath, photoFile);
+      .upload(filePath, photoFile, {
+        cacheControl: "3600",
+        upsert: false,
+      });
 
     if (error) {
       throw error;
