@@ -15,6 +15,8 @@ export default function ManualCheckinPage() {
   const [checkinDate, setCheckinDate] = useState(getToday());
   const [checkinTime, setCheckinTime] = useState(getNowTime());
 
+  const showHistory = false;
+
   useEffect(() => {
     loadMembers();
     loadSessions();
@@ -99,7 +101,7 @@ export default function ManualCheckinPage() {
       return;
     }
 
-    loadCheckins();
+    setCheckins((prev) => prev.filter((item) => item.id !== id));
   }
 
   const filteredMembers = members.filter((member) =>
@@ -188,52 +190,54 @@ export default function ManualCheckinPage() {
           </button>
         </section>
 
-        <section className="mt-8">
-          <h2 className="text-xl font-semibold text-[#4b5f4a]">
-            รายการเช็คอินทั้งหมด
-          </h2>
+        {showHistory && (
+          <section className="mt-8">
+            <h2 className="text-xl font-semibold text-[#4b5f4a]">
+              รายการเช็คอินทั้งหมด
+            </h2>
 
-          <div className="mt-4 space-y-3">
-            {checkins.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between rounded-xl border bg-[#fffdf8] p-4"
-              >
-                <div>
-                  <p className="font-semibold">
-                    {item.members?.full_name || "-"}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Session:{" "}
-                    {item.sessions?.session_name ||
-                      item.session_name ||
-                      "ไม่ระบุ"}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    วันที่: {item.checkin_date || "-"}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    เวลา:{" "}
-                    {item.checkin_time
-                      ? new Date(item.checkin_time).toLocaleTimeString()
-                      : "-"}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => deleteCheckin(item.id)}
-                  className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+            <div className="mt-4 space-y-3">
+              {checkins.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between rounded-xl border bg-[#fffdf8] p-4"
                 >
-                  Delete
-                </button>
-              </div>
-            ))}
+                  <div>
+                    <p className="font-semibold">
+                      {item.members?.full_name || "-"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Session:{" "}
+                      {item.sessions?.session_name ||
+                        item.session_name ||
+                        "ไม่ระบุ"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      วันที่: {item.checkin_date || "-"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      เวลา:{" "}
+                      {item.checkin_time
+                        ? new Date(item.checkin_time).toLocaleTimeString()
+                        : "-"}
+                    </p>
+                  </div>
 
-            {checkins.length === 0 && (
-              <p className="text-gray-500">ยังไม่มีรายการเช็คอิน</p>
-            )}
-          </div>
-        </section>
+                  <button
+                    onClick={() => deleteCheckin(item.id)}
+                    className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+
+              {checkins.length === 0 && (
+                <p className="text-gray-500">ยังไม่มีรายการเช็คอิน</p>
+              )}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );
