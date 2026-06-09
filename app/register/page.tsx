@@ -64,24 +64,24 @@ export default function RegisterPage() {
       const profilePhotoUrl = await uploadProfilePhoto();
 
       const payload = {
-        full_name: formData.get("full_name"),
-        nickname: formData.get("nickname"),
-        gender: formData.get("gender"),
-        birth_date: convertDateToISO(formData.get("birth_date") as string),
-        age: formData.get("age"),
-          ? Number(formData.get("age"))
-          : null,
-        phone: formData.get("phone"),
-        email: formData.get("email"),
-        line_id: formData.get("line_id"),
-        address: formData.get("address"),
-        occupation: formData.get("occupation"),
-        referral_source: formData.get("referral_source"),
-        sitting_preference: formData.get("sitting_preference"),
-        meditation_preference: formData.get("meditation_preference"),
-        health_concern: formData.get("health_concern"),
-        profile_photo_url: profilePhotoUrl,
-      };
+  full_name: formData.get("full_name"),
+  nickname: formData.get("nickname"),
+  gender: formData.get("gender"),
+  birth_date: convertDateToISO(formData.get("birth_date") as string),
+  age: formData.get("age")
+    ? Number(formData.get("age"))
+    : null,
+  phone: formData.get("phone"),
+  email: formData.get("email"),
+  line_id: formData.get("line_id"),
+  address: formData.get("address"),
+  occupation: formData.get("occupation"),
+  referral_source: formData.get("referral_source"),
+  sitting_preference: formData.get("sitting_preference"),
+  meditation_preference: formData.get("meditation_preference"),
+  health_concern: formData.get("health_concern"),
+  profile_photo_url: profilePhotoUrl,
+};
 
       const { error } = await supabase.from("members").insert(payload);
 
