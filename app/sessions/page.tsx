@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 export default function SessionsPage() {
@@ -181,6 +182,13 @@ export default function SessionsPage() {
                 </div>
 
                 <div className="flex gap-2">
+                  <Link
+                    href={`/sessions/${session.id}`}
+                    className="rounded-lg bg-green-700 px-4 py-2 text-white hover:bg-green-800"
+                  >
+                    View
+                  </Link>
+
                   <button
                     onClick={() => editSession(session)}
                     className="rounded-lg bg-yellow-500 px-4 py-2 text-white"
