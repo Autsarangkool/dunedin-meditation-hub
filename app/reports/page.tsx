@@ -173,11 +173,24 @@ export default function ReportsPage() {
 }, [allCheckins]);
 
   const topDay = [...dailyData].sort((a, b) => b.count - a.count)[0];
-  const topWeek = [...weeklyData].sort((a, b) => b.count - a.count)[0];
-  const topMonth = [...monthlyData].sort((a, b) => b.count - a.count)[0];
-  const topSession = [...sessionData].sort(
-  (a, b) => b.count - a.count
-)[0];
+const topWeek = [...weeklyData].sort((a, b) => b.count - a.count)[0];
+const topMonth = [...monthlyData].sort((a, b) => b.count - a.count)[0];
+const topSession = [...sessionData].sort((a, b) => b.count - a.count)[0];
+
+const topWeekSessions = useMemo(() => {
+  if (!topWeek?.week) return [];
+
+  return sessions
+    .filter((session) => getWeekKey(session.event_date) === topWeek.week)
+    .sort((a, b) => a.event_date.localeCompare(b.event_date));
+}, [sessions, topWeek]);
+
+const topWeekSessionRange =
+  topWeekSessions.length > 0
+    ? `${topWeekSessions[0].session_name} - ${
+        topWeekSessions[topWeekSessions.length - 1].session_name
+      }`
+    : "-";
 function formatThaiMonth(monthKey: string) {
   const months = [
     "มกราคม",
@@ -227,9 +240,13 @@ function formatThaiMonth(monthKey: string) {
 
           <SummaryCard
   title="อาทิตย์คนเยอะสุด"
-  value={topWeek?.week ? `สัปดาห์ ${topWeek.week.split("-W")[1]}` : "-"}
-  subtitle={`${topWeek?.count || 0} คน`}
-/>         
+  value={
+    topWeek?.week
+      ? `สัปดาห์ ${topWeek.week.split("-W")[1]}`
+      : "-"
+  }
+  subtitle={`${topWeekSessionRange} • ${topWeek?.count || 0} คน`}
+/>       
 
           <SummaryCard
   title="เดือนคนเยอะสุด"
