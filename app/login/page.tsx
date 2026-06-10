@@ -22,7 +22,7 @@ export default function LoginPage() {
   return;
 }
 
-router.push("/members");
+router.push("/");
 router.refresh();
   }
 

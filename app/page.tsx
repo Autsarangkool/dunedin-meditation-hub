@@ -74,6 +74,12 @@ export default async function Home() {
 
   const mostActiveMember = topMembers[0];
 
+  const uniqueParticipants = new Set(
+  (allCheckins || [])
+    .map((item) => item.member_id)
+    .filter(Boolean)
+).size;
+
   const attendanceByMonth: Record<string, number> = {};
 
   (monthCheckins || []).forEach((item) => {
@@ -106,16 +112,49 @@ export default async function Home() {
             <AuthButton />
           </div>
 
+<div className="mt-8 rounded-3xl border border-blue-100 bg-blue-50 p-8">
+  <div className="flex items-center justify-between">
+    <div>
+      <p className="text-sm text-slate-600">
+        จำนวนผู้เข้าร่วมโครงการทั้งหมด
+      </p>
+
+      <h2 className="mt-2 text-5xl font-bold text-blue-700">
+  {uniqueParticipants}
+</h2>
+
+      <p className="mt-2 text-slate-500">
+        คน (ตั้งแต่เริ่มโครงการจนถึงปัจจุบัน)
+      </p>
+    </div>
+
+    <div className="text-right">
+      <p className="text-green-600 font-medium">
+        ● Real-time Database
+      </p>
+      <p className="text-sm text-slate-500">
+        อัปเดตจาก Supabase ล่าสุด
+      </p>
+    </div>
+  </div>
+</div>
+
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="สมาชิกทั้งหมด / Total Members" value={totalMembers} />
-            <StatCard title="สมาชิกใหม่เดือนนี้ / New This Month" value={newMembersThisMonth} />
-            <StatCard title="เช็คอินวันนี้ / Today Check-ins" value={totalCheckinsToday} />
-            <StatCard title="เช็คอินเดือนนี้ / Monthly Check-ins" value={totalCheckinsThisMonth} />
-            <StatCard title="Sessions ทั้งหมด / Total Sessions" value={totalSessions} />
-            <StatCard title="มีรูปโปรไฟล์ / With Photo" value={membersWithPhoto} />
-            <StatCard title="ผู้ที่เคยมา / Active Members" value={topMembers.length} />
-            <StatCard title="มามากที่สุด / Top Attendance" value={mostActiveMember?.count || 0} />
-          </div>
+  <StatCard
+    title="เช็คอินวันนี้ / Today Check-ins"
+    value={totalCheckinsToday}
+  />
+
+  <StatCard
+    title="เช็คอินเดือนนี้ / Monthly Check-ins"
+    value={totalCheckinsThisMonth}
+  />
+
+  <StatCard
+    title="Sessions ทั้งหมด / Total Sessions"
+    value={totalSessions}
+  />
+</div>
 
           {mostActiveMember && (
             <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-6">
