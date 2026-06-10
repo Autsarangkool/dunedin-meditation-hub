@@ -77,6 +77,63 @@ export default function AttendancePage() {
     })
     .sort((a, b) => b.totalAttendances - a.totalAttendances);
 
+  function escapeCSV(value: any) {
+    if (value === null || value === undefined) return "";
+
+    const stringValue = String(value).replace(/"/g, '""');
+    return `"${stringValue}"`;
+  }
+
+  function exportAttendanceCSV() {
+    if (reportRows.length === 0) {
+      alert("ไม่มีข้อมูลสำหรับ Export");
+      return;
+    }
+
+    const headers = [
+      "Rank",
+      "Full Name",
+      "Nickname",
+      "Phone",
+      "Email",
+      "Total Attendances",
+      "Latest Date",
+      "Latest Session",
+    ];
+
+    const rows = reportRows.map((member, index) => [
+      index + 1,
+      member.full_name || "",
+      member.nickname || "",
+      member.phone || "",
+      member.email || "",
+      member.totalAttendances || 0,
+      member.latestDate || "",
+      member.latestSession || "",
+    ]);
+
+    const csvContent = [
+      headers.map(escapeCSV).join(","),
+      ...rows.map((row) => row.map(escapeCSV).join(",")),
+    ].join("\n");
+
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    const today = new Date().toISOString().split("T")[0];
+
+    link.href = url;
+    link.download = `attendance-report-${today}.csv`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f3ea] p-6">
       <div className="mx-auto max-w-6xl rounded-3xl bg-white p-8 shadow-md">
@@ -91,12 +148,21 @@ export default function AttendancePage() {
             </p>
           </div>
 
-          <Link
-            href="/"
-            className="rounded-xl border px-5 py-3 font-semibold text-[#4b5f4a]"
-          >
-            ← กลับหน้าแรก
-          </Link>
+          <div className="flex gap-3">
+            <button
+              onClick={exportAttendanceCSV}
+              className="rounded-xl bg-green-700 px-5 py-3 font-semibold text-white hover:bg-green-800"
+            >
+              Export Attendance CSV
+            </button>
+
+            <Link
+              href="/"
+              className="rounded-xl border px-5 py-3 font-semibold text-[#4b5f4a]"
+            >
+              ← กลับหน้าแรก
+            </Link>
+          </div>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
