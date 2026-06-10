@@ -149,6 +149,9 @@ export default async function Home() {
             <a href="/checkin">
               <Card title="Check-in" subtitle="เช็คอินสมาชิก" />
             </a>
+            <a href="/checkin/scan">
+  <Card title="QR Scanner" subtitle="สแกน QR เช็คอิน" />
+</a>
 
             <a href="/sessions">
               <Card title="Sessions" subtitle="จัดการรอบกิจกรรม" />
