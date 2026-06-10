@@ -11,23 +11,31 @@ export default function MembersPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-  const admin = localStorage.getItem("admin");
+    const admin = localStorage.getItem("admin");
 
-  if (!admin) {
-    router.push("/login");
-    return;
-  }
+    if (!admin) {
+      router.push("/login");
+      return;
+    }
 
-  loadMembers();
-}, [router]);
+    loadMembers();
+  }, [router]);
 
   async function loadMembers() {
-    const { data } = await supabase
-      .from("members")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("members").select("*");
 
-    setMembers(data || []);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    const sortedMembers = (data || []).sort((a, b) =>
+      (a.full_name || "").localeCompare(b.full_name || "", ["en", "th"], {
+        sensitivity: "base",
+      })
+    );
+
+    setMembers(sortedMembers);
   }
 
   const filteredMembers = members.filter((member) => {
