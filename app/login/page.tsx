@@ -2,24 +2,27 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
 
-    if (
-      username === "admin" &&
-      password === "meditation2025"
-    ) {
-      localStorage.setItem("admin", "true");
-      router.push("/");
-    } else {
-      alert("Username หรือ Password ไม่ถูกต้อง");
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert("Email หรือ Password ไม่ถูกต้อง");
+      return;
     }
+
+    router.push("/");
   }
 
   return (
@@ -33,11 +36,11 @@ export default function LoginPage() {
         </h1>
 
         <input
-          type="text"
-          placeholder="Username"
+          type="email"
+          placeholder="Email"
           className="w-full border p-3 rounded-lg mb-4"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
 
         <input
