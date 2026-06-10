@@ -57,34 +57,49 @@ export default function SessionsPage() {
       sessionNumber.trim() || generateNextSessionNumber();
 
     if (editingId) {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("sessions")
         .update({
           session_name: sessionName,
           session_number: finalSessionNumber,
           event_date: eventDate,
         })
-        .eq("id", editingId);
+        .eq("id", editingId)
+        .select()
+        .single();
 
       if (error) {
         alert(error.message);
         return;
       }
+
+      setSessions((prev) =>
+        prev.map((session) => (session.id === editingId ? data : session))
+      );
     } else {
-      const { error } = await supabase.from("sessions").insert({
-        session_name: sessionName,
-        session_number: finalSessionNumber,
-        event_date: eventDate,
-      });
+      const { data, error } = await supabase
+        .from("sessions")
+        .insert({
+          session_name: sessionName,
+          session_number: finalSessionNumber,
+          event_date: eventDate,
+        })
+        .select()
+        .single();
 
       if (error) {
         alert(error.message);
         return;
       }
+
+      setSessions((prev) =>
+        [data, ...prev].sort((a, b) =>
+          String(b.event_date || "").localeCompare(String(a.event_date || ""))
+        )
+      );
     }
 
     resetForm();
-    loadSessions();
   }
 
   function editSession(session: any) {
@@ -104,7 +119,11 @@ export default function SessionsPage() {
       return;
     }
 
-    loadSessions();
+    setSessions((prev) => prev.filter((session) => session.id !== id));
+
+    if (editingId === id) {
+      resetForm();
+    }
   }
 
   return (
