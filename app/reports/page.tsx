@@ -67,14 +67,16 @@ export default function ReportsPage() {
   }
 
   function getDateKey(item: any) {
-    if (item.checkin_date) return item.checkin_date;
+  if (item.sessions?.event_date) return item.sessions.event_date;
 
-    if (item.checkin_time) {
-      return new Date(item.checkin_time).toISOString().slice(0, 10);
-    }
+  if (item.checkin_date) return item.checkin_date;
 
-    return "ไม่ทราบวันที่";
+  if (item.checkin_time) {
+    return new Date(item.checkin_time).toISOString().slice(0, 10);
   }
+
+  return "ไม่ทราบวันที่";
+}
 
   function getWeekKey(dateText: string) {
     const date = new Date(dateText);
@@ -138,57 +140,37 @@ export default function ReportsPage() {
   }, [allCheckins]);
 
   const sessionData = useMemo(() => {
-    const map: Record<string, number> = {};
+  const map: Record<string, { session: string; count: number }> = {};
+  const seen = new Set<string>();
 
-    allCheckins.forEach((item) => {
-      const sessionName =
-        item.sessions?.session_name ||
-        item.session_name ||
-        "ไม่ทราบ Session";
+  allCheckins.forEach((item) => {
+    const sessionId = item.session_id;
+    const memberId = item.member_id;
 
-      map[sessionName] = (map[sessionName] || 0) + 1;
-    });
+    if (!sessionId || !memberId) return;
 
-    return Object.entries(map)
-      .map(([session, count]) => ({ session, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-  }, [allCheckins]);
+    const uniqueKey = `${sessionId}-${memberId}`;
+    if (seen.has(uniqueKey)) return;
 
-  const dayOfWeekData = useMemo(() => {
-    const days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
+    seen.add(uniqueKey);
 
-    const map: Record<string, number> = {
-      Sunday: 0,
-      Monday: 0,
-      Tuesday: 0,
-      Wednesday: 0,
-      Thursday: 0,
-      Friday: 0,
-      Saturday: 0,
-    };
+    const sessionName =
+      item.sessions?.session_name ||
+      item.session_name ||
+      "ไม่ทราบ Session";
 
-    allCheckins.forEach((item) => {
-      const dateKey = getDateKey(item);
-      if (dateKey === "ไม่ทราบวันที่") return;
+    if (!map[sessionId]) {
+      map[sessionId] = {
+        session: sessionName,
+        count: 0,
+      };
+    }
 
-      const dayName = days[new Date(dateKey).getDay()];
-      map[dayName] = (map[dayName] || 0) + 1;
-    });
+    map[sessionId].count += 1;
+  });
 
-    return days.map((day) => ({
-      day,
-      count: map[day],
-    }));
-  }, [allCheckins]);
+  return Object.values(map).sort((a, b) => b.count - a.count);
+}, [allCheckins]);
 
   const topDay = [...dailyData].sort((a, b) => b.count - a.count)[0];
   const topWeek = [...weeklyData].sort((a, b) => b.count - a.count)[0];
@@ -246,7 +228,7 @@ function formatThaiMonth(monthKey: string) {
           <SummaryCard
   title="อาทิตย์คนเยอะสุด"
   value={topWeek?.week ? `สัปดาห์ ${topWeek.week.split("-W")[1]}` : "-"}
-  subtitle={`${topWeek?.count || 0} ครั้ง`}
+  subtitle={`${topWeek?.count || 0} คน`}
 />         
 
           <SummaryCard
@@ -256,7 +238,7 @@ function formatThaiMonth(monthKey: string) {
       ? formatThaiMonth(topMonth.month)
       : "-"
   }
-  subtitle={`${topMonth?.count || 0} ครั้ง`}
+  subtitle={`${topMonth?.count || 0} คน`}
 />
           </div>
 
