@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import DeleteButton from "./DeleteButton";
+import QRCodeCard from "./QRCodeCard";
 
 export default async function MemberDetail({
   params,
@@ -86,6 +87,10 @@ export default async function MemberDetail({
                 </p>
               </div>
             </div>
+            <QRCodeCard
+  memberId={member.id}
+  memberName={member.full_name || "-"}
+/>
 
             <div className="mt-5 flex w-full flex-col gap-3">
               <Link
