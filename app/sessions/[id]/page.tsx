@@ -14,9 +14,7 @@ export default function SessionDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (sessionId) {
-      loadData();
-    }
+    if (sessionId) loadData();
   }, [sessionId]);
 
   async function loadData() {
@@ -39,8 +37,76 @@ export default function SessionDetailPage() {
     setLoading(false);
   }
 
+  function escapeCSV(value: any) {
+    if (value === null || value === undefined) return "";
+
+    const stringValue = String(value).replace(/"/g, '""');
+    return `"${stringValue}"`;
+  }
+
+  function exportCSV() {
+    if (!session) {
+      alert("ยังไม่พบข้อมูล Session");
+      return;
+    }
+
+    if (checkins.length === 0) {
+      alert("ยังไม่มีรายชื่อผู้เข้าร่วมให้ Export");
+      return;
+    }
+
+    const headers = [
+      "No",
+      "Full Name",
+      "Nickname",
+      "Phone",
+      "Email",
+      "Session Name",
+      "Session Number",
+      "Session Date",
+      "Check-in Date",
+      "Check-in Time",
+    ];
+
+    const rows = checkins.map((item, index) => [
+      index + 1,
+      item.members?.full_name || "",
+      item.members?.nickname || "",
+      item.members?.phone || "",
+      item.members?.email || "",
+      session.session_name || item.session_name || "",
+      session.session_number || "",
+      session.event_date || "",
+      item.checkin_date || "",
+      item.checkin_time
+        ? new Date(item.checkin_time).toLocaleTimeString()
+        : "",
+    ]);
+
+    const csvContent = [
+      headers.map(escapeCSV).join(","),
+      ...rows.map((row) => row.map(escapeCSV).join(",")),
+    ].join("\n");
+
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const fileName = `session-${session.session_number || session.id}.csv`;
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = fileName;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  }
+
   async function deleteCheckin(id: string) {
-    if (!confirm("ต้องการลบเช็คอินนี้ใช่ไหม?")) return;
+    if (!confirm("ต้องการลบรายชื่อนี้ออกจากการเช็คอินใช่ไหม?")) return;
 
     const { error } = await supabase.from("checkins").delete().eq("id", id);
 
@@ -49,13 +115,13 @@ export default function SessionDetailPage() {
       return;
     }
 
-    loadData();
+    setCheckins((prev) => prev.filter((item) => item.id !== id));
   }
 
   return (
     <main className="min-h-screen bg-[#f7f3ea] p-6">
       <div className="mx-auto max-w-5xl rounded-3xl bg-white p-8 shadow-md">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-[#4b5f4a]">
               รายชื่อผู้เข้าร่วม Session
@@ -70,20 +136,29 @@ export default function SessionDetailPage() {
             )}
           </div>
 
-          <Link
-            href="/sessions"
-            className="rounded-xl border px-5 py-3 font-semibold hover:bg-[#f7f3ea]"
-          >
-            ← กลับ
-          </Link>
+          <div className="flex gap-3">
+            <button
+              onClick={exportCSV}
+              className="rounded-xl bg-green-700 px-5 py-3 font-semibold text-white hover:bg-green-800"
+            >
+              Export CSV
+            </button>
+
+            <Link
+              href="/sessions"
+              className="rounded-xl border px-5 py-3 font-semibold"
+            >
+              ← กลับ
+            </Link>
+          </div>
         </div>
 
         {loading ? (
-          <p className="mt-8 text-gray-500">กำลังโหลด...</p>
+          <p className="mt-8">กำลังโหลด...</p>
         ) : (
           <>
-            <div className="mt-6 rounded-2xl border bg-[#fffdf8] p-6">
-              <p className="text-xl font-semibold text-[#4b5f4a]">
+            <div className="mt-6 rounded-2xl border bg-[#fffdf8] p-5">
+              <p className="text-xl font-semibold">
                 ผู้เข้าร่วมทั้งหมด {checkins.length} คน
               </p>
             </div>
