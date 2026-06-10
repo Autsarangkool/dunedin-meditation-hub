@@ -11,15 +11,19 @@ export default function MembersPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const admin = localStorage.getItem("admin");
+  async function checkSession() {
+    const { data } = await supabase.auth.getSession();
 
-    if (!admin) {
+    if (!data.session) {
       router.push("/login");
       return;
     }
 
     loadMembers();
-  }, [router]);
+  }
+
+  checkSession();
+}, [router]);
 
   async function loadMembers() {
     const { data, error } = await supabase.from("members").select("*");
