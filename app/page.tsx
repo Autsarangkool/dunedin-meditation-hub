@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import AttendanceChart from "./components/AttendanceChart";
+import AuthButton from "./components/AuthButton";
 
 export default async function Home() {
   const today = new Date().toISOString().split("T")[0];
@@ -89,16 +90,24 @@ export default async function Home() {
   }));
 
   return (
-    <main className="min-h-screen bg-[#f7f3ea] p-6">
-      <section className="mx-auto max-w-7xl">
-        <div className="rounded-3xl bg-white p-8 shadow-md">
-          <h1 className="text-4xl font-bold text-[#4b5f4a]">
-            Dunedin Meditation Hub
-          </h1>
+  <main className="min-h-screen bg-[#f7f3ea] p-6">
+    <section className="mx-auto max-w-7xl">
+      <div className="rounded-3xl bg-white p-8 shadow-md">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-[#4b5f4a]">
+              Dunedin Meditation Hub
+            </h1>
 
-          <p className="mt-3 text-gray-600">
-            ระบบเช็คอินและฐานข้อมูลผู้เข้าร่วมนั่งสมาธิ / Meditation Check-in & Member Database System
-          </p>
+            <p className="mt-3 text-gray-600">
+              ระบบเช็คอินและฐานข้อมูลผู้เข้าร่วมสมาธิ / Meditation Check-in & Member Database System
+            </p>
+          </div>
+
+          <AuthButton />
+        </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4"></div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard title="สมาชิกทั้งหมด / Total Members" value={totalMembers} />
