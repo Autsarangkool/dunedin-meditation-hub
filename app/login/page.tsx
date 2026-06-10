@@ -18,11 +18,12 @@ export default function LoginPage() {
     });
 
     if (error) {
-      alert("Email หรือ Password ไม่ถูกต้อง");
-      return;
-    }
+  alert("Email หรือ Password ไม่ถูกต้อง");
+  return;
+}
 
-    router.push("/");
+router.push("/members");
+router.refresh();
   }
 
   return (

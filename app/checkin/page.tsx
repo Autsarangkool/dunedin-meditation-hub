@@ -140,6 +140,12 @@ export default function CheckinPage() {
   return (
     <main className="min-h-screen bg-[#f7f3ea] p-6">
       <div className="mx-auto max-w-6xl rounded-3xl bg-white p-8 shadow-md">
+        <a
+  href="/"
+  className="mb-4 inline-block rounded-xl bg-teal-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-teal-700"
+>
+  🏠 กลับหน้าหลัก
+</a>
         <h1 className="text-3xl font-bold text-[#4b5f4a]">
           เช็คอินสมาชิก / Member Check-in
         </h1>

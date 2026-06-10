@@ -80,7 +80,6 @@ export default async function Home() {
     if (!item.checkin_date) return;
 
     const month = item.checkin_date.slice(0, 7);
-
     attendanceByMonth[month] = (attendanceByMonth[month] || 0) + 1;
   });
 
@@ -90,24 +89,22 @@ export default async function Home() {
   }));
 
   return (
-  <main className="min-h-screen bg-[#f7f3ea] p-6">
-    <section className="mx-auto max-w-7xl">
-      <div className="rounded-3xl bg-white p-8 shadow-md">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-[#4b5f4a]">
-              Dunedin Meditation Hub
-            </h1>
+    <main className="min-h-screen bg-slate-50 p-6">
+      <section className="mx-auto max-w-7xl">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="flex items-start justify-between gap-6">
+            <div>
+  <h1 className="text-4xl font-bold text-slate-900">
+    Dunedin Meditation Hub
+  </h1>
 
-            <p className="mt-3 text-gray-600">
-              ระบบเช็คอินและฐานข้อมูลผู้เข้าร่วมสมาธิ / Meditation Check-in & Member Database System
-            </p>
+  <p className="mt-3 text-slate-600">
+    ระบบเช็คอินและฐานข้อมูลผู้เข้าร่วมสมาธิ / Meditation Check-in & Member Database System
+  </p>
+</div>
+
+            <AuthButton />
           </div>
-
-          <AuthButton />
-        </div>
-
-        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4"></div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard title="สมาชิกทั้งหมด / Total Members" value={totalMembers} />
@@ -117,10 +114,7 @@ export default async function Home() {
             <StatCard title="Sessions ทั้งหมด / Total Sessions" value={totalSessions} />
             <StatCard title="มีรูปโปรไฟล์ / With Photo" value={membersWithPhoto} />
             <StatCard title="ผู้ที่เคยมา / Active Members" value={topMembers.length} />
-            <StatCard
-              title="มามากที่สุด / Top Attendance"
-              value={mostActiveMember?.count || 0}
-            />
+            <StatCard title="มามากที่สุด / Top Attendance" value={mostActiveMember?.count || 0} />
           </div>
 
           {mostActiveMember && (
@@ -143,7 +137,7 @@ export default async function Home() {
                 )}
 
                 <div>
-                  <p className="text-2xl font-bold text-[#4b5f4a]">
+                  <p className="text-2xl font-bold text-slate-900">
                     {mostActiveMember.member?.full_name || "-"}
                   </p>
                   <p className="text-gray-600">
@@ -158,12 +152,17 @@ export default async function Home() {
             <a href="/checkin">
               <Card title="Check-in" subtitle="เช็คอินสมาชิก" />
             </a>
+
             <a href="/checkin/scan">
-  <Card title="QR Scanner" subtitle="สแกน QR เช็คอิน" />
-</a>
+              <Card title="QR Scanner" subtitle="สแกน QR เช็คอิน" />
+            </a>
 
             <a href="/sessions">
               <Card title="Sessions" subtitle="จัดการรอบกิจกรรม" />
+            </a>
+
+            <a href="/reports">
+              <Card title="Analytics Report" subtitle="กราฟการเข้าร่วม" />
             </a>
 
             <a href="/attendance">
@@ -190,8 +189,8 @@ export default async function Home() {
           </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
-            <section className="rounded-2xl border border-[#e5dfcf] bg-[#fffdf8] p-6">
-              <h2 className="text-xl font-semibold text-[#4b5f4a]">
+            <section className="rounded-2xl border border-slate-200 bg-white p-6">
+              <h2 className="text-xl font-semibold text-slate-900">
                 Top 10 Most Active Members
               </h2>
 
@@ -199,7 +198,7 @@ export default async function Home() {
                 {topMembers.map((item: any, index: number) => (
                   <div
                     key={item.member.id}
-                    className="flex items-center justify-between border-b pb-3"
+                    className="flex items-center justify-between border-b border-slate-100 pb-3"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 font-bold text-green-700">
@@ -213,16 +212,16 @@ export default async function Home() {
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e5dfcf] text-sm">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm">
                           🙏
                         </div>
                       )}
 
                       <div>
-                        <p className="font-medium text-[#4b5f4a]">
+                        <p className="font-medium text-slate-900">
                           {item.member.full_name || "-"}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-slate-600">
                           {item.member.phone || item.member.email || "-"}
                         </p>
                       </div>
@@ -242,14 +241,14 @@ export default async function Home() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-[#e5dfcf] bg-[#fffdf8] p-6">
-              <h2 className="text-xl font-semibold text-[#4b5f4a]">
+            <section className="rounded-2xl border border-slate-200 bg-white p-6">
+              <h2 className="text-xl font-semibold text-slate-900">
                 สมาชิกใหม่ล่าสุด / Latest Members
               </h2>
 
               <div className="mt-4 space-y-3">
                 {latestMembers.map((member) => (
-                  <div key={member.id} className="flex items-center gap-3 border-b pb-3">
+                  <div key={member.id} className="flex items-center gap-3 border-b border-slate-100 pb-3">
                     {member.profile_photo_url ? (
                       <img
                         src={member.profile_photo_url}
@@ -257,16 +256,16 @@ export default async function Home() {
                         className="h-10 w-10 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e5dfcf] text-sm">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm">
                         -
                       </div>
                     )}
 
                     <div>
-                      <p className="font-medium text-[#4b5f4a]">
+                      <p className="font-medium text-slate-900">
                         {member.full_name || "-"}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         {member.phone || member.email || "-"}
                       </p>
                     </div>
@@ -279,21 +278,21 @@ export default async function Home() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-[#e5dfcf] bg-[#fffdf8] p-6">
-              <h2 className="text-xl font-semibold text-[#4b5f4a]">
+            <section className="rounded-2xl border border-slate-200 bg-white p-6">
+              <h2 className="text-xl font-semibold text-slate-900">
                 Sessions ล่าสุด / Latest Sessions
               </h2>
 
               <div className="mt-4 space-y-3">
                 {latestSessions.map((session) => (
-                  <div key={session.id} className="border-b pb-3">
-                    <p className="font-medium text-[#4b5f4a]">
+                  <div key={session.id} className="border-b border-slate-100 pb-3">
+                    <p className="font-medium text-slate-900">
                       {session.session_name || "-"}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-600">
                       {session.event_date || "-"} · {session.start_time || "-"} - {session.end_time || "-"}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-600">
                       {session.location || "-"}
                     </p>
                   </div>
@@ -305,12 +304,12 @@ export default async function Home() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-[#e5dfcf] bg-[#fffdf8] p-6">
-              <h2 className="text-xl font-semibold text-[#4b5f4a]">
+            <section className="rounded-2xl border border-slate-200 bg-white p-6">
+              <h2 className="text-xl font-semibold text-slate-900">
                 Attendance Trend
               </h2>
 
-              <p className="mt-2 text-gray-600">
+              <p className="mt-2 text-slate-600">
                 จำนวนการเช็คอินรายเดือน
               </p>
 
@@ -325,20 +324,34 @@ export default async function Home() {
   );
 }
 
-function StatCard({ title, value }: { title: string; value: number }) {
+function StatCard({
+  title,
+  value,
+}: {
+  title: string;
+  value: number;
+}) {
   return (
-    <div className="rounded-2xl border border-[#e5dfcf] bg-[#fffdf8] p-5 shadow-sm">
-      <p className="text-sm text-gray-600">{title}</p>
-      <p className="mt-2 text-4xl font-bold text-[#4b5f4a]">{value}</p>
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+      <p className="text-sm font-medium text-slate-500">{title}</p>
+      <p className="mt-3 text-4xl font-bold tracking-tight text-slate-900">
+        {value}
+      </p>
     </div>
   );
 }
 
-function Card({ title, subtitle }: { title: string; subtitle: string }) {
+function Card({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
   return (
-    <div className="h-full rounded-2xl border border-[#e5dfcf] bg-[#fffdf8] p-6 shadow-sm hover:shadow-md">
-      <h2 className="text-xl font-semibold text-[#4b5f4a]">{title}</h2>
-      <p className="mt-2 text-gray-600">{subtitle}</p>
+    <div className="h-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+      <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+      <p className="mt-2 text-slate-600">{subtitle}</p>
     </div>
   );
 }

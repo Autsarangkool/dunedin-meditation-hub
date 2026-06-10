@@ -139,6 +139,12 @@ export default function AttendancePage() {
       <div className="mx-auto max-w-6xl rounded-3xl bg-white p-8 shadow-md">
         <div className="flex items-center justify-between gap-4">
           <div>
+            <a
+  href="/"
+  className="mb-4 inline-block rounded-xl bg-teal-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-teal-700"
+>
+  🏠 กลับหน้าหลัก
+</a>
             <h1 className="text-3xl font-bold text-[#4b5f4a]">
               รายงานการเข้าร่วม / Attendance Report
             </h1>
