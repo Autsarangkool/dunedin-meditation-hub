@@ -9,10 +9,8 @@ export default function RegisterPage() {
 
   function convertDateToISO(dateText: string) {
     if (!dateText) return null;
-
     const [day, month, year] = dateText.split("/");
     if (!day || !month || !year) return null;
-
     return `${year}-${month}-${day}`;
   }
 
@@ -43,9 +41,7 @@ export default function RegisterPage() {
         upsert: false,
       });
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
     const { data } = supabase.storage
       .from("member-photos")
@@ -54,7 +50,7 @@ export default function RegisterPage() {
     return data.publicUrl;
   }
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const form = e.currentTarget;
@@ -64,24 +60,32 @@ export default function RegisterPage() {
       const profilePhotoUrl = await uploadProfilePhoto();
 
       const payload = {
-  full_name: formData.get("full_name"),
-  nickname: formData.get("nickname"),
-  gender: formData.get("gender"),
-  birth_date: convertDateToISO(formData.get("birth_date") as string),
-  age: formData.get("age")
-    ? Number(formData.get("age"))
-    : null,
-  phone: formData.get("phone"),
-  email: formData.get("email"),
-  line_id: formData.get("line_id"),
-  address: formData.get("address"),
-  occupation: formData.get("occupation"),
-  referral_source: formData.get("referral_source"),
-  sitting_preference: formData.get("sitting_preference"),
-  meditation_preference: formData.get("meditation_preference"),
-  health_concern: formData.get("health_concern"),
-  profile_photo_url: profilePhotoUrl,
-};
+        code_number: formData.get("code_number"),
+        full_name: formData.get("full_name"),
+        nickname: formData.get("nickname"),
+        gender: formData.get("gender"),
+        birth_date: convertDateToISO(formData.get("birth_date") as string),
+        nationality: formData.get("nationality"),
+
+        phone: formData.get("phone"),
+        email: formData.get("email"),
+        address: formData.get("address"),
+
+        meditated_before: formData.get("meditated_before"),
+        meditation_duration: formData.get("meditation_duration"),
+        joining_goals: formData.getAll("joining_goals"),
+        joining_goal_other: formData.get("joining_goal_other"),
+
+        preferred_days: formData.get("preferred_days"),
+        referral_source: formData.get("referral_source"),
+        referral_other: formData.get("referral_other"),
+
+        consent_agreed: formData.get("consent_agreed") === "on",
+        signature_name: formData.get("signature_name"),
+        start_date: convertDateToISO(formData.get("start_date") as string),
+
+        profile_photo_url: profilePhotoUrl,
+      };
 
       const { error } = await supabase.from("members").insert(payload);
 
@@ -103,17 +107,26 @@ export default function RegisterPage() {
     <main className="min-h-screen bg-[#f7f3ea] p-6">
       <div className="mx-auto max-w-4xl rounded-3xl bg-white p-8 shadow-md">
         <a
-  href="/"
-  className="mb-4 inline-block rounded-xl bg-teal-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-teal-700"
->
-  🏠 กลับหน้าหลัก
-</a>
-        <h1 className="text-3xl font-bold text-[#4b5f4a]">
-          ลงทะเบียนสมาชิกใหม่ / New Member Registration
+          href="/"
+          className="mb-4 inline-block rounded-xl bg-teal-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-teal-700"
+        >
+          🏠 กลับหน้าหลัก
+        </a>
+
+        <p className="text-sm font-medium text-[#7a6a43]">
+          Take an hour to unwind, refocus, and reset.
+        </p>
+
+        <h1 className="mt-2 text-3xl font-bold text-[#4b5f4a]">
+          Mindfulness Meditation Membership Form
         </h1>
 
+        <p className="mt-1 text-gray-600">
+          DIRI – Dunedin Meditation Hub
+        </p>
+
         <form onSubmit={handleSubmit} className="mt-8 grid gap-4 md:grid-cols-2">
-          <div className="md:col-span-2 rounded-2xl border bg-[#fffdf8] p-5">
+          <section className="md:col-span-2 rounded-2xl border bg-[#fffdf8] p-5">
             <label className="font-semibold text-[#4b5f4a]">
               รูปโปรไฟล์ / Profile Photo
             </label>
@@ -138,113 +151,168 @@ export default function RegisterPage() {
                 className="rounded-lg border p-3"
               />
             </div>
-          </div>
+          </section>
+
+          <input
+            name="code_number"
+            className="rounded-lg border p-3"
+            placeholder="Code Number"
+          />
 
           <input
             name="full_name"
             className="rounded-lg border p-3"
-            placeholder="ชื่อ - นามสกุล / Full Name"
+            placeholder="Full Name"
             required
           />
 
           <input
             name="nickname"
             className="rounded-lg border p-3"
-            placeholder="ชื่อเล่น / Nickname"
+            placeholder="Preferred Name / Nickname"
           />
 
           <select name="gender" className="rounded-lg border p-3">
-            <option value="">เพศ / Gender</option>
-            <option value="male">ชาย / Male</option>
-            <option value="female">หญิง / Female</option>
-            <option value="other">อื่น ๆ / Other</option>
+            <option value="">Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
           </select>
 
           <input
             name="birth_date"
             type="text"
             inputMode="numeric"
-            placeholder="วันเกิด DD/MM/YYYY เช่น 02/04/1995"
+            placeholder="Date of Birth DD/MM/YYYY"
             pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$"
             className="rounded-lg border p-3"
           />
 
           <input
-            name="age"
+            name="nationality"
             className="rounded-lg border p-3"
-            type="number"
-            placeholder="อายุ / Age"
+            placeholder="Nationality"
           />
 
           <input
             name="phone"
             className="rounded-lg border p-3"
             type="tel"
-            placeholder="เบอร์โทร / Phone Number"
+            placeholder="Phone Number"
           />
 
           <input
             name="email"
             className="rounded-lg border p-3"
             type="email"
-            placeholder="อีเมล / Email"
-          />
-
-          <input
-            name="line_id"
-            className="rounded-lg border p-3"
-            placeholder="Line ID"
+            placeholder="Email"
           />
 
           <textarea
             name="address"
             className="rounded-lg border p-3 md:col-span-2"
-            placeholder="ที่อยู่ / Address"
+            placeholder="Address"
             rows={3}
           />
 
-          <input
-            name="occupation"
-            className="rounded-lg border p-3"
-            placeholder="อาชีพ / Occupation"
-          />
+          <div className="md:col-span-2 rounded-2xl border bg-[#fffdf8] p-5">
+            <h2 className="font-semibold text-[#4b5f4a]">
+              Meditation Experience
+            </h2>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <select name="meditated_before" className="rounded-lg border p-3">
+                <option value="">Have you meditated before?</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+
+              <select name="meditation_duration" className="rounded-lg border p-3">
+                <option value="">If yes, how long?</option>
+                <option value="less_than_3_months">Less than 3 months</option>
+                <option value="3_to_12_months">3–12 months</option>
+                <option value="more_than_1_year">More than 1 year</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="md:col-span-2 rounded-2xl border bg-[#fffdf8] p-5">
+            <h2 className="font-semibold text-[#4b5f4a]">
+              Goals for Joining
+            </h2>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {[
+                ["relaxation", "Relaxation"],
+                ["mental_clarity", "Mental clarity"],
+                ["spiritual_growth", "Spiritual growth"],
+                ["improve_focus", "Improve focus"],
+              ].map(([value, label]) => (
+                <label key={value} className="flex items-center gap-2">
+                  <input type="checkbox" name="joining_goals" value={value} />
+                  {label}
+                </label>
+              ))}
+
+              <input
+                name="joining_goal_other"
+                className="rounded-lg border p-3 md:col-span-2"
+                placeholder="Other goal"
+              />
+            </div>
+          </div>
+
+          <select name="preferred_days" className="rounded-lg border p-3">
+            <option value="">Preferred Days</option>
+            <option value="thursday">Thursday</option>
+            <option value="friday">Friday</option>
+            <option value="both">Both days</option>
+          </select>
 
           <select name="referral_source" className="rounded-lg border p-3">
-            <option value="">รู้จักจากทางไหน / How did you hear about us?</option>
-            <option value="friend">เพื่อน / Friend</option>
-            <option value="poster">ป้ายโปรโมท / Poster or Sign</option>
-            <option value="facebook">Facebook</option>
-            <option value="other">อื่น ๆ / Other</option>
+            <option value="">How did you hear about us?</option>
+            <option value="social_media">Social Media</option>
+            <option value="friends_family">Friends / Family</option>
+            <option value="poster">Poster</option>
+            <option value="walk_in">Walk-in</option>
+            <option value="other">Other</option>
           </select>
 
-          <select name="sitting_preference" className="rounded-lg border p-3">
-            <option value="">รูปแบบการนั่ง / Sitting Preference</option>
-            <option value="floor">นั่งพื้น / Floor Sitting</option>
-            <option value="chair">นั่งเก้าอี้ / Chair Sitting</option>
-          </select>
-
-          <select name="meditation_preference" className="rounded-lg border p-3">
-  <option value="">รูปแบบสมาธิที่ชอบ / Preferred Meditation Style</option>
-  <option value="relaxation">ความผ่อนคลาย / Relaxation</option>
-  <option value="breathing">กำหนดลมหายใจ / Breathing Awareness</option>
-  <option value="visualization">การนึกภาพ / Visualization</option>
-  <option value="reduce_stress">ลดความเครียด / Reduce Stress</option>
-  <option value="mental_charity">เมตตาภาวนา / Mental Charity</option>
-  <option value="walking_meditation">เดินจงกรม / Walking Meditation</option>
-  <option value="happiness">ความสุข / Happiness</option>
-  <option value="other">อื่น ๆ / Other</option>
-</select>
-
-          <select
-            name="health_concern"
+          <input
+            name="referral_other"
             className="rounded-lg border p-3 md:col-span-2"
-          >
-            <option value="">มีปัญหาสุขภาพไหม / Any health concerns?</option>
-            <option value="none">ไม่มี / None</option>
-            <option value="back_pain">ปวดหลัง / Back Pain</option>
-            <option value="knee_pain">ปวดเข่า / Knee Pain</option>
-            <option value="other">อื่น ๆ / Other</option>
-          </select>
+            placeholder="Referral other"
+          />
+
+          <div className="md:col-span-2 rounded-2xl border bg-[#fffdf8] p-5">
+            <h2 className="font-semibold text-[#4b5f4a]">Consent</h2>
+
+            <label className="mt-4 flex items-start gap-3">
+              <input
+                name="consent_agreed"
+                type="checkbox"
+                required
+                className="mt-1"
+              />
+              <span>
+                I agree to participate in the meditation sessions organised by DIRI.
+              </span>
+            </label>
+          </div>
+
+          <input
+            name="signature_name"
+            className="rounded-lg border p-3"
+            placeholder="Signature / Full Name"
+          />
+
+          <input
+            name="start_date"
+            type="text"
+            inputMode="numeric"
+            placeholder="Start Date DD/MM/YYYY"
+            pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$"
+            className="rounded-lg border p-3"
+          />
 
           <button
             type="submit"
