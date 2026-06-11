@@ -51,33 +51,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 
   background:
-    radial-gradient(
-      circle at top left,
-      rgba(186, 230, 253, 0.55),
-      transparent 32%
-    ),
-    radial-gradient(
-      circle at top right,
-      rgba(167, 243, 208, 0.48),
-      transparent 34%
-    ),
-    radial-gradient(
-      circle at bottom left,
-      rgba(191, 219, 254, 0.35),
-      transparent 30%
-    ),
-    radial-gradient(
-      circle at bottom right,
-      rgba(209, 250, 229, 0.42),
-      transparent 32%
-    ),
-    linear-gradient(
-      135deg,
-      #f8fafc 0%,
-      #eff6ff 28%,
-      #ecfeff 55%,
-      #f0fdf4 100%
-    );
+    radial-gradient(circle at top left, rgba(186, 230, 253, 0.65), transparent 30%),
+    radial-gradient(circle at top right, rgba(167, 243, 208, 0.55), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(191, 219, 254, 0.45), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(209, 250, 229, 0.5), transparent 34%),
+    linear-gradient(135deg, #f8fafc 0%, #eff6ff 30%, #ecfeff 58%, #f0fdf4 100%);
 
   background-attachment: fixed;
 }
@@ -86,15 +64,14 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  pointer-events: none;
   z-index: -1;
+  pointer-events: none;
 
   background:
-    linear-gradient(
-      120deg,
-      rgba(255, 255, 255, 0.75),
-      rgba(255, 255, 255, 0.15)
-    );
+    linear-gradient(120deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.25)),
+    radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.75), transparent 28%);
+
+  backdrop-filter: blur(1px);
 }
 
 button,
