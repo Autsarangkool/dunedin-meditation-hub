@@ -28,19 +28,29 @@ export default function CheckinPage() {
   }
 
   async function loadMembers() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("members")
       .select("*")
       .order("full_name");
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     setMembers(data || []);
   }
 
   async function loadSessions() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("sessions")
       .select("*")
       .order("event_date", { ascending: false });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     setSessions(data || []);
 
@@ -50,14 +60,21 @@ export default function CheckinPage() {
   }
 
   async function loadTodayCheckins() {
+    if (!selectedSessionId) return;
+
     const today = getToday();
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("checkins")
       .select("*, members(*), sessions(*)")
       .eq("checkin_date", today)
       .eq("session_id", selectedSessionId)
       .order("checkin_time", { ascending: false });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     setTodayCheckins(data || []);
 
@@ -73,6 +90,8 @@ export default function CheckinPage() {
         ...latest,
         totalVisits: count || 0,
       });
+    } else {
+      setLatestCheckin(null);
     }
   }
 
@@ -127,6 +146,27 @@ export default function CheckinPage() {
     setSearch("");
   }
 
+  async function handleDeleteCheckin(checkinId: string) {
+    const confirmDelete = window.confirm(
+      "ต้องการลบ Check-in นี้หรือไม่? / Delete this check-in?"
+    );
+
+    if (!confirmDelete) return;
+
+    const { error } = await supabase
+      .from("checkins")
+      .delete()
+      .eq("id", checkinId);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    await loadTodayCheckins();
+    alert("ลบ Check-in เรียบร้อย / Check-in deleted");
+  }
+
   const filteredMembers = members.filter((member) =>
     `${member.full_name || ""} ${member.nickname || ""} ${member.phone || ""} ${
       member.email || ""
@@ -141,11 +181,12 @@ export default function CheckinPage() {
     <main className="min-h-screen bg-[#f7f3ea] p-6">
       <div className="mx-auto max-w-6xl rounded-3xl bg-white p-8 shadow-md">
         <a
-  href="/"
-  className="mb-4 inline-block rounded-xl bg-teal-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-teal-700"
->
-  🏠 กลับหน้าหลัก
-</a>
+          href="/"
+          className="mb-4 inline-block rounded-xl bg-teal-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-teal-700"
+        >
+          🏠 กลับหน้าหลัก
+        </a>
+
         <h1 className="text-3xl font-bold text-[#4b5f4a]">
           เช็คอินสมาชิก / Member Check-in
         </h1>
@@ -348,6 +389,67 @@ export default function CheckinPage() {
               </div>
             )}
           </section>
+        </div>
+
+        <div className="mt-10 rounded-2xl border border-[#e5dfcf] bg-[#fffdf8] p-6">
+          <h2 className="text-xl font-semibold text-[#4b5f4a]">
+            รายการเช็คอินวันนี้ / Today&apos;s Check-ins
+          </h2>
+
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="p-3 text-left">สมาชิก / Member</th>
+                  <th className="p-3 text-left">เวลา / Time</th>
+                  <th className="p-3 text-left">Session</th>
+                  <th className="p-3 text-center">จัดการ / Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {todayCheckins.map((checkin) => (
+                  <tr key={checkin.id} className="border-b">
+                    <td className="p-3">
+                      {checkin.members?.full_name || "-"}
+                    </td>
+
+                    <td className="p-3">
+                      {checkin.checkin_time
+                        ? new Date(checkin.checkin_time).toLocaleTimeString()
+                        : "-"}
+                    </td>
+
+                    <td className="p-3">
+                      {checkin.sessions?.session_name ||
+                        checkin.session_name ||
+                        "-"}
+                    </td>
+
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => handleDeleteCheckin(checkin.id)}
+                        className="rounded-lg bg-red-600 px-3 py-2 text-white hover:bg-red-700"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+
+                {todayCheckins.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="p-6 text-center text-gray-500"
+                    >
+                      ยังไม่มี Check-in วันนี้ / No check-ins today
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </main>
