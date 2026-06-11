@@ -2,32 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
 export default function AuthButton() {
-  const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setIsLoggedIn(!!data.session);
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setIsLoggedIn(!!session);
-      }
-    );
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    setIsLoggedIn(document.cookie.includes("sb-access-token="));
   }, []);
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push("/login");
+  function handleLogout() {
+    document.cookie =
+      "sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+    window.location.href = "/login";
   }
 
   if (isLoggedIn) {

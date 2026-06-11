@@ -43,6 +43,7 @@ export default async function Home() {
 
   const totalCheckinsToday = todayCheckins?.length || 0;
   const totalCheckinsThisMonth = monthCheckins?.length || 0;
+  const totalCheckinsAllTime = allCheckins?.length || 0;
   const totalSessions = sessions?.length || 0;
 
   const membersWithPhoto =
@@ -82,7 +83,7 @@ export default async function Home() {
 
   const attendanceByMonth: Record<string, number> = {};
 
-  (monthCheckins || []).forEach((item) => {
+  (allCheckins || []).forEach((item) => {
     if (!item.checkin_date) return;
 
     const month = item.checkin_date.slice(0, 7);
@@ -93,6 +94,15 @@ export default async function Home() {
     month,
     count,
   }));
+
+  const attendanceBySession: Record<string, number> = {};
+
+(allCheckins || []).forEach((item) => {
+  if (!item.session_id) return;
+
+  attendanceBySession[item.session_id] =
+    (attendanceBySession[item.session_id] || 0) + 1;
+});
 
   return (
     <main className="min-h-screen bg-slate-50 p-6">
@@ -113,29 +123,34 @@ export default async function Home() {
           </div>
 
 <div className="mt-8 rounded-3xl border border-blue-100 bg-blue-50 p-8">
-  <div className="flex items-center justify-between">
-    <div>
-      <p className="text-sm text-slate-600">
-        จำนวนผู้เข้าร่วมโครงการทั้งหมด
-      </p>
+ <div className="grid gap-8 md:grid-cols-2">
+  <div>
+    <p className="text-sm font-medium text-slate-600">
+      สมาชิกทั้งหมด / Total Members
+    </p>
 
-      <h2 className="mt-2 text-5xl font-bold text-blue-700">
-  {uniqueParticipants}
-</h2>
+    <h2 className="mt-2 text-6xl font-bold text-blue-700">
+      {totalMembers}
+    </h2>
 
-      <p className="mt-2 text-slate-500">
-        คน (ตั้งแต่เริ่มโครงการจนถึงปัจจุบัน)
-      </p>
-    </div>
+    <p className="mt-2 text-slate-500">
+      คน
+    </p>
+  </div>
 
-    <div className="text-right">
-      <p className="text-green-600 font-medium">
-        ● Real-time Database
-      </p>
-      <p className="text-sm text-slate-500">
-        อัปเดตจาก Supabase ล่าสุด
-      </p>
-    </div>
+  <div className="md:text-right">
+    <p className="text-sm font-medium text-slate-600">
+      เช็คอินสะสมทั้งหมด / All-Time Check-ins
+    </p>
+
+    <h2 className="mt-2 text-7xl font-bold text-green-600">
+      {totalCheckinsAllTime}
+    </h2>
+
+    <p className="mt-2 text-slate-500">
+      ครั้ง
+    </p>
+  </div>
   </div>
 </div>
 
@@ -154,43 +169,25 @@ export default async function Home() {
     title="Sessions ทั้งหมด / Total Sessions"
     value={totalSessions}
   />
+  
 </div>
 
-          {mostActiveMember && (
-            <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-6">
-              <p className="text-sm text-gray-600">
-                สมาชิกที่มาบ่อยที่สุด / Most Active Member
-              </p>
-
-              <div className="mt-3 flex items-center gap-4">
-                {mostActiveMember.member?.profile_photo_url ? (
-                  <img
-                    src={mostActiveMember.member.profile_photo_url}
-                    alt=""
-                    className="h-16 w-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-3xl">
-                    🙏
-                  </div>
-                )}
-
-                <div>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {mostActiveMember.member?.full_name || "-"}
-                  </p>
-                  <p className="text-gray-600">
-                    เข้าร่วมทั้งหมด {mostActiveMember.count} ครั้ง
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <a href="/checkin">
-              <Card title="Check-in" subtitle="เช็คอินสมาชิก" />
-            </a>
+            <a href="/checkin" className="lg:col-span-2">
+  <div className="rounded-2xl bg-green-600 p-8 text-white shadow-lg hover:bg-green-700 transition">
+    <h2 className="text-5xl font-bold">
+      ✓ Check-in
+    </h2>
+
+    <p className="mt-2 text-xl">
+      เช็คอินสมาชิก
+    </p>
+
+    <p className="mt-2 text-green-100">
+      คลิกเพื่อเช็คอินสมาชิกทันที
+    </p>
+  </div>
+</a>
 
             <a href="/checkin/scan">
               <Card title="QR Scanner" subtitle="สแกน QR เช็คอิน" />
@@ -232,6 +229,37 @@ export default async function Home() {
               <h2 className="text-xl font-semibold text-slate-900">
                 Top 10 Most Active Members
               </h2>
+
+               {mostActiveMember && (
+            <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-6">
+              <p className="text-sm text-gray-600">
+                สมาชิกที่มาบ่อยที่สุด / Most Active Member
+              </p>
+
+              <div className="mt-3 flex items-center gap-4">
+                {mostActiveMember.member?.profile_photo_url ? (
+                  <img
+                    src={mostActiveMember.member.profile_photo_url}
+                    alt=""
+                    className="h-16 w-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-3xl">
+                    🙏
+                  </div>
+                )}
+
+                <div>
+                  <p className="text-2xl font-bold text-slate-900">
+                    {mostActiveMember.member?.full_name || "-"}
+                  </p>
+                  <p className="text-gray-600">
+                    เข้าร่วมทั้งหมด {mostActiveMember.count} ครั้ง
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
               <div className="mt-4 space-y-3">
                 {topMembers.map((item: any, index: number) => (
@@ -331,9 +359,9 @@ export default async function Home() {
                     <p className="text-sm text-slate-600">
                       {session.event_date || "-"} · {session.start_time || "-"} - {session.end_time || "-"}
                     </p>
-                    <p className="text-sm text-slate-600">
-                      {session.location || "-"}
-                    </p>
+                    <p className="text-sm font-medium text-green-600">
+  ผู้เข้าร่วม {attendanceBySession[session.id] || 0} คน
+</p>
                   </div>
                 ))}
 
@@ -344,18 +372,54 @@ export default async function Home() {
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h2 className="text-xl font-semibold text-slate-900">
-                Attendance Trend
-              </h2>
+  <h2 className="text-xl font-semibold text-slate-900">
+    System Summary
+  </h2>
 
-              <p className="mt-2 text-slate-600">
-                จำนวนการเช็คอินรายเดือน
-              </p>
+  <div className="mt-6 space-y-4">
+    <div className="flex justify-between">
+      <span>Members</span>
+      <span className="font-bold">{totalMembers}</span>
+    </div>
 
-              <div className="mt-6">
-                <AttendanceChart data={chartData} />
-              </div>
-            </section>
+    <div className="flex justify-between">
+      <span>Sessions</span>
+      <span className="font-bold">{totalSessions}</span>
+    </div>
+
+    <div className="flex justify-between">
+      <span>Check-ins</span>
+      <span className="font-bold">{totalCheckinsAllTime}</span>
+    </div>
+
+    <div className="flex justify-between">
+      <span>Unique Participants</span>
+      <span className="font-bold">{uniqueParticipants}</span>
+    </div>
+
+    <div className="flex justify-between">
+      <span>New Members This Month</span>
+      <span className="font-bold">{newMembersThisMonth}</span>
+    </div>
+
+    <div className="flex justify-between">
+      <span>Members With Photo</span>
+      <span className="font-bold">{membersWithPhoto}</span>
+    </div>
+
+    <div className="border-t pt-4">
+      <p className="text-sm text-slate-500">
+        Average Attendance / Session
+      </p>
+
+      <p className="text-3xl font-bold text-green-600">
+        {totalSessions > 0
+          ? (totalCheckinsAllTime / totalSessions).toFixed(1)
+          : 0}
+      </p>
+    </div>
+  </div>
+</section>
           </div>
         </div>
       </section>

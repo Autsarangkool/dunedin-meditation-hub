@@ -12,18 +12,21 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({
+  email,
+  password,
+});
 
     if (error) {
   alert("Email หรือ Password ไม่ถูกต้อง");
   return;
 }
 
-router.push("/");
-router.refresh();
+if (data.session) {
+  document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=604800`;
+}
+
+window.location.href = "/";
   }
 
   return (

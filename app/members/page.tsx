@@ -11,19 +11,19 @@ export default function MembersPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-  async function checkSession() {
-    const { data } = await supabase.auth.getSession();
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
 
-    if (!data.session) {
-      router.push("/login");
-      return;
+      if (!data.session) {
+        router.push("/login");
+        return;
+      }
+
+      loadMembers();
     }
 
-    loadMembers();
-  }
-
-  checkSession();
-}, [router]);
+    checkSession();
+  }, [router]);
 
   async function loadMembers() {
     const { data, error } = await supabase.from("members").select("*");
@@ -56,13 +56,22 @@ export default function MembersPage() {
   return (
     <main className="min-h-screen bg-[#f7f3ea] p-6">
       <div className="mx-auto max-w-6xl rounded-3xl bg-white p-8 shadow-md">
+        <div className="mb-4 flex flex-wrap gap-3">
+          <a
+            href="/"
+            className="rounded-xl bg-teal-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-teal-700"
+          >
+            🏠 กลับหน้าหลัก
+          </a>
 
-        <a
-  href="/"
-  className="mb-4 inline-block rounded-xl bg-teal-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-teal-700"
->
-  🏠 กลับหน้าหลัก
-</a>
+          <a
+            href="/members/pdf"
+            target="_blank"
+            className="rounded-xl bg-red-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-red-700"
+          >
+            📄 Export PDF
+          </a>
+        </div>
 
         <h1 className="text-3xl font-bold text-[#4b5f4a]">
           รายชื่อสมาชิก / Members List
