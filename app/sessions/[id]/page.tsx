@@ -115,7 +115,9 @@ export default function SessionDetailPage() {
       return;
     }
 
-    setCheckins((prev) => prev.filter((item) => item.id !== id));
+    setCheckins((prev) =>
+  prev.filter((item) => String(item.id) !== String(id))
+);
   }
 
   return (
