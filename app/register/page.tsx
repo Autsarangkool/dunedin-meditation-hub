@@ -224,12 +224,16 @@ export default function RegisterPage() {
           </select>
 
           <select name="meditation_preference" className="rounded-lg border p-3">
-            <option value="">รูปแบบสมาธิที่ชอบ / Preferred Meditation Style</option>
-            <option value="relaxation">ความผ่อนคลาย / Relaxation</option>
-            <option value="breathing">กำหนดลมหายใจ / Breathing Awareness</option>
-            <option value="visualization">การนึกภาพ / Visualization</option>
-            <option value="other">อื่น ๆ / Other</option>
-          </select>
+  <option value="">รูปแบบสมาธิที่ชอบ / Preferred Meditation Style</option>
+  <option value="relaxation">ความผ่อนคลาย / Relaxation</option>
+  <option value="breathing">กำหนดลมหายใจ / Breathing Awareness</option>
+  <option value="visualization">การนึกภาพ / Visualization</option>
+  <option value="reduce_stress">ลดความเครียด / Reduce Stress</option>
+  <option value="mental_charity">เมตตาภาวนา / Mental Charity</option>
+  <option value="walking_meditation">เดินจงกรม / Walking Meditation</option>
+  <option value="happiness">ความสุข / Happiness</option>
+  <option value="other">อื่น ๆ / Other</option>
+</select>
 
           <select
             name="health_concern"
