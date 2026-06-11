@@ -137,8 +137,6 @@ export default async function Home() {
           </div>
 
           <div className="mt-6 grid gap-5 md:grid-cols-3">
-            <StatCard icon="📅" title="เช็คอินวันนี้ / Today Check-ins" value={totalCheckinsToday} unit="คน" />
-            <StatCard icon="🗓️" title="เช็คอินเดือนนี้ / Monthly Check-ins" value={totalCheckinsThisMonth} unit="คน" />
             <StatCard icon="👥" title="Sessions ทั้งหมด / Total Sessions" value={totalSessions} unit="รอบ" />
           </div>
 
