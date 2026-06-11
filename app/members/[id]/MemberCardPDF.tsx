@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Document,
   Page,
@@ -74,11 +72,6 @@ const styles = StyleSheet.create({
     color: "#4b5f4a",
     marginBottom: 4,
   },
-  memberId: {
-    fontSize: 6,
-    color: "#666666",
-    marginBottom: 8,
-  },
   footer: {
     fontSize: 7,
     color: "#111111",
@@ -95,13 +88,7 @@ export default function MemberCardPDF({
 }) {
   return (
     <Document>
-      <Page
-        size={{
-          width: 242.65,
-          height: 153.01,
-        }}
-        style={styles.page}
-      >
+      <Page size={{ width: 242.65, height: 153.01 }} style={styles.page}>
         <View style={styles.card}>
           <View style={styles.header}>
             <Text style={styles.title}>DUNEDIN MEDITATION HUB</Text>
@@ -117,10 +104,7 @@ export default function MemberCardPDF({
             <View style={styles.info}>
               <Text style={styles.name}>{name}</Text>
               <Text style={styles.role}>Active Member</Text>
-              <Text style={styles.memberId}>Meditation Program</Text>
-              <Text style={styles.footer}>
-                Dunedin Meditation Hub
-              </Text>
+              <Text style={styles.footer}>Dunedin Meditation Hub</Text>
             </View>
           </View>
         </View>

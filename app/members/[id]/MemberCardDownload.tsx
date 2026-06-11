@@ -1,9 +1,14 @@
 "use client";
 
-import { PDFDownloadLink } from "@react-pdf/renderer";
+import dynamic from "next/dynamic";
 import * as QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import MemberCardPDF from "./MemberCardPDF";
+
+const PDFDownloadLink = dynamic(
+  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
+  { ssr: false }
+);
 
 export default function MemberCardDownload({
   member,
@@ -17,13 +22,22 @@ export default function MemberCardDownload({
   const [qrUrl, setQrUrl] = useState("");
 
   useEffect(() => {
-  const checkinUrl =
-    `${window.location.origin}/checkin/qr/${member.id}`;
+    async function generateQR() {
+      const checkinUrl = `${window.location.origin}/checkin/qr/${member.id}`;
+      const url = await QRCode.toDataURL(checkinUrl);
+      setQrUrl(url);
+    }
 
-  QRCode.toDataURL(checkinUrl).then((url: string) => {
-    setQrUrl(url);
-  });
-}, [member.id]);
+    generateQR();
+  }, [member.id]);
+
+  if (!qrUrl) {
+    return (
+      <button disabled className="rounded-xl bg-gray-400 px-6 py-3 text-white">
+        กำลังเตรียม PDF...
+      </button>
+    );
+  }
 
   return (
     <PDFDownloadLink
@@ -35,10 +49,10 @@ export default function MemberCardDownload({
         />
       }
       fileName={`member-card-${member.full_name || member.id}.pdf`}
-      className="rounded-xl bg-[#4b5f4a] px-6 py-3 text-center font-semibold text-white"
+      className="rounded-xl bg-[#4b5f4a] px-6 py-3 text-white"
     >
-      {({ loading }) =>
-        loading ? "กำลังเตรียม PDF..." : "ดาวน์โหลดบัตรสมาชิก PDF"
+      {({ loading }: any) =>
+        loading ? "กำลังสร้าง PDF..." : "📄 ดาวน์โหลดบัตรสมาชิก PDF"
       }
     </PDFDownloadLink>
   );
