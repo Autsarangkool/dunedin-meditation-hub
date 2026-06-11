@@ -105,14 +105,13 @@ export default function SessionDetailPage() {
     URL.revokeObjectURL(url);
   }
 
-  async function deleteCheckin(memberId: string) {
-  if (!confirm("ต้องการลบสมาชิกคนนี้ออกจาก Session นี้ใช่ไหม?")) return;
+  async function deleteCheckin(id: string) {
+  if (!confirm("ต้องการลบรายการนี้ใช่ไหม?")) return;
 
   const { error } = await supabase
     .from("checkins")
     .delete()
-    .eq("session_id", session.id)
-    .eq("member_id", memberId);
+    .eq("id", id);
 
   if (error) {
     alert(error.message);
@@ -120,8 +119,10 @@ export default function SessionDetailPage() {
   }
 
   setCheckins((prev) =>
-    prev.filter((item) => String(item.member_id) !== String(memberId))
+    prev.filter((item) => String(item.id) !== String(id))
   );
+
+  await loadData();
 }
 
   return (
@@ -211,7 +212,7 @@ export default function SessionDetailPage() {
                   </div>
 
                   <button
-                    onClick={() => deleteCheckin(item.member_id)}
+                    onClick={() => deleteCheckin(item.id)}
                     className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
                   >
                     Delete
