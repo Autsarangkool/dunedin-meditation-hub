@@ -105,14 +105,14 @@ export default async function Home() {
 });
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
+    <main className="min-h-screen p-6">
       <section className="mx-auto max-w-7xl">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="rounded-3xl border border-white/70 bg-white/80 p-8 shadow-2xl backdrop-blur-md">
           <div className="flex items-start justify-between gap-6">
             <div>
-  <h1 className="text-4xl font-bold text-slate-900">
-    Dunedin Meditation Hub
-  </h1>
+  <h1 className="text-7xl font-black tracking-tight bg-gradient-to-r from-red-400 via-amber-400 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg">
+  Dunedin Meditation Hub
+</h1>
 
   <p className="mt-3 text-slate-600">
     ระบบเช็คอินและฐานข้อมูลผู้เข้าร่วมสมาธิ / Meditation Check-in & Member Database System
@@ -125,31 +125,31 @@ export default async function Home() {
 <div className="mt-8 rounded-3xl border border-blue-100 bg-blue-50 p-8">
  <div className="grid gap-8 md:grid-cols-2">
   <div>
-    <p className="text-sm font-medium text-slate-600">
-      สมาชิกทั้งหมด / Total Members
-    </p>
+    <p className="text-xl font-bold text-slate-700">
+  สมาชิกทั้งหมด / Total Members
+</p>
 
     <h2 className="mt-2 text-6xl font-bold text-blue-700">
       {totalMembers}
     </h2>
 
-    <p className="mt-2 text-slate-500">
-      คน
-    </p>
+    <p className="mt-2 text-xl font-bold text-blue-700">
+  คน
+</p>
   </div>
 
   <div className="md:text-right">
-    <p className="text-sm font-medium text-slate-600">
-      เช็คอินสะสมทั้งหมด / All-Time Check-ins
-    </p>
+    <p className="text-xl font-bold text-slate-700">
+  เช็คอินสะสมทั้งหมด / All-Time Check-ins
+</p>
 
     <h2 className="mt-2 text-7xl font-bold text-green-600">
       {totalCheckinsAllTime}
     </h2>
 
-    <p className="mt-2 text-slate-500">
-      ครั้ง
-    </p>
+    <p className="mt-2 text-lg font-bold text-green-700">
+  ครั้ง
+</p>
   </div>
   </div>
 </div>
@@ -174,7 +174,7 @@ export default async function Home() {
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <a href="/checkin" className="lg:col-span-2">
-  <div className="rounded-2xl bg-green-600 p-8 text-white shadow-lg hover:bg-green-700 transition">
+  <div className="rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 p-8 text-white shadow-lg hover:bg-green-700 transition">
     <h2 className="text-5xl font-bold">
       ✓ Check-in
     </h2>
@@ -225,7 +225,7 @@ export default async function Home() {
           </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
-            <section className="rounded-2xl border border-slate-200 bg-white p-6">
+            <section className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-md p-6">
               <h2 className="text-xl font-semibold text-slate-900">
                 Top 10 Most Active Members
               </h2>
@@ -359,8 +359,8 @@ export default async function Home() {
                     <p className="text-sm text-slate-600">
                       {session.event_date || "-"} · {session.start_time || "-"} - {session.end_time || "-"}
                     </p>
-                    <p className="text-sm font-medium text-green-600">
-  ผู้เข้าร่วม {attendanceBySession[session.id] || 0} คน
+                    <p className="mt-2 text-xl font-bold text-green-700">
+  ครั้ง
 </p>
                   </div>
                 ))}
@@ -435,7 +435,7 @@ function StatCard({
   value: number;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xl transition hover:shadow-md">
       <p className="text-sm font-medium text-slate-500">{title}</p>
       <p className="mt-3 text-4xl font-bold tracking-tight text-slate-900">
         {value}
