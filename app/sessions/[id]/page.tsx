@@ -122,7 +122,6 @@ export default function SessionDetailPage() {
     prev.filter((item) => String(item.id) !== String(id))
   );
 
-  await loadData();
 }
 
   return (

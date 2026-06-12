@@ -15,7 +15,7 @@ export default function ManualCheckinPage() {
   const [checkinDate, setCheckinDate] = useState(getToday());
   const [checkinTime, setCheckinTime] = useState(getNowTime());
 
-  const showHistory = false;
+  const showHistory = true;
 
   useEffect(() => {
     loadMembers();
@@ -54,13 +54,14 @@ export default function ManualCheckinPage() {
   }
 
   async function loadCheckins() {
-    const { data } = await supabase
-      .from("checkins")
-      .select("*, members(*), sessions(*)")
-      .order("checkin_time", { ascending: false });
+  const { data } = await supabase
+    .from("checkins")
+    .select("*, members(*), sessions(*)")
+    .order("checkin_date", { ascending: false })
+    .order("checkin_time", { ascending: false });
 
-    setCheckins(data || []);
-  }
+  setCheckins(data || []);
+}
 
   async function addManualCheckin() {
     if (!selectedMemberId) {
@@ -92,17 +93,21 @@ export default function ManualCheckinPage() {
   }
 
   async function deleteCheckin(id: string) {
-    if (!confirm("ต้องการลบรายการเช็คอินนี้ใช่ไหม?")) return;
+  if (!confirm("ต้องการลบรายการเช็คอินนี้ใช่ไหม?")) return;
 
-    const { error } = await supabase.from("checkins").delete().eq("id", id);
+  const { error } = await supabase
+    .from("checkins")
+    .delete()
+    .eq("id", id);
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setCheckins((prev) => prev.filter((item) => item.id !== id));
+  if (error) {
+    alert(error.message);
+    return;
   }
+
+  setCheckins((prev) => prev.filter((item) => item.id !== id));
+  await loadCheckins();
+}
 
   const filteredMembers = members.filter((member) =>
     `${member.full_name || ""} ${member.nickname || ""} ${member.phone || ""} ${
