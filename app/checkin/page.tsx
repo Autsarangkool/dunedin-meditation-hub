@@ -28,18 +28,14 @@ export default function CheckinPage() {
   }
 
   async function loadMembers() {
-    const { data, error } = await supabase
-      .from("members")
-      .select("*")
-      .order("full_name");
+  const { data } = await supabase
+    .from("members")
+    .select("*")
+    .eq("is_deleted", false)
+    .order("full_name");
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setMembers(data || []);
-  }
+  setMembers(data || []);
+}
 
   async function loadSessions() {
     const { data, error } = await supabase
@@ -117,15 +113,20 @@ export default function CheckinPage() {
     }
 
     const { data, error } = await supabase
-      .from("checkins")
-      .insert({
-        member_id: member.id,
-        session_id: session.id,
-        session_name: session.session_name,
-        checkin_date: getToday(),
-      })
-      .select("*, members(*), sessions(*)")
-      .single();
+  .from("checkins")
+  .upsert(
+    {
+      member_id: member.id,
+      session_id: session.id,
+      session_name: session.session_name,
+      checkin_date: getToday(),
+    },
+    {
+      onConflict: "member_id,session_id",
+    }
+  )
+  .select("*, members(*), sessions(*)")
+  .single();
 
     if (error) {
       alert(error.message);
