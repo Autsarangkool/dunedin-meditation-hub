@@ -11,6 +11,7 @@ export default function MembersPage() {
   const [search, setSearch] = useState("");
   const [editingMember, setEditingMember] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   useEffect(() => {
     async function checkSession() {
@@ -48,8 +49,9 @@ export default function MembersPage() {
   }
 
   function startEdit(member: any) {
-    setEditingMember({ ...member });
-  }
+  setEditingMember({ ...member });
+  setPhotoFile(null);
+}
 
   function cancelEdit() {
     setEditingMember(null);
@@ -62,14 +64,50 @@ export default function MembersPage() {
     }));
   }
 
+function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file || !editingMember) return;
+
+  setPhotoFile(file);
+
+  setEditingMember({
+    ...editingMember,
+    profile_photo_url: URL.createObjectURL(file),
+  });
+}
+
+async function uploadProfilePhoto() {
+  if (!photoFile) return editingMember?.profile_photo_url || null;
+
+  const fileExt = photoFile.name.split(".").pop();
+  const fileName = `member-${Date.now()}.${fileExt}`;
+  const filePath = `profiles/${fileName}`;
+
+  const { error } = await supabase.storage
+    .from("profile-photos")
+    .upload(filePath, photoFile, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage
+    .from("profile-photos")
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+}
+
   async function saveMember() {
     if (!editingMember) return;
 
     setSaving(true);
 
+const profilePhotoUrl = await uploadProfilePhoto();
     const { error } = await supabase
       .from("members")
-      .update({
+      .update({profile_photo_url: profilePhotoUrl,
         full_name: editingMember.full_name || null,
         nickname: editingMember.nickname || null,
         gender: editingMember.gender || null,
@@ -222,6 +260,32 @@ export default function MembersPage() {
               <h2 className="text-2xl font-bold text-[#4b5f4a]">
                 แก้ไขข้อมูลสมาชิก / Edit Member
               </h2>
+              <div className="mt-6 rounded-2xl border bg-[#fffdf8] p-5">
+  <label className="font-semibold text-[#4b5f4a]">
+    Profile Photo
+  </label>
+
+  <div className="mt-4 flex items-center gap-4">
+    <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-gray-200">
+      {editingMember.profile_photo_url ? (
+        <img
+          src={editingMember.profile_photo_url}
+          alt={editingMember.full_name || ""}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <span className="text-4xl">🙏</span>
+      )}
+    </div>
+
+    <input
+      type="file"
+      accept="image/*"
+      onChange={handlePhotoChange}
+      className="rounded-lg border p-3"
+    />
+  </div>
+</div>
 
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <input
