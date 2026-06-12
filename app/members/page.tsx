@@ -152,71 +152,69 @@ export default function MembersPage() {
           className="mt-6 w-full rounded-xl border p-3"
         />
 
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b bg-[#f7f3ea]">
-                <th className="p-3">รูป / Photo</th>
-                <th className="p-3">ชื่อ / Name</th>
-                <th className="p-3">ชื่อเล่น / Nickname</th>
-                <th className="p-3">โทร / Phone</th>
-                <th className="p-3">อีเมล / Email</th>
-                <th className="p-3">จัดการ / Action</th>
-              </tr>
-            </thead>
+        <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+  {filteredMembers.map((member) => (
+    <div
+      key={member.id}
+      className="rounded-3xl bg-white p-5 shadow-md border"
+    >
+      <div className="flex items-center gap-4">
+        {member.profile_photo_url ? (
+          <img
+            src={member.profile_photo_url}
+            alt={member.full_name || ""}
+            className="h-20 w-20 rounded-full object-cover"
+          />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-200 text-3xl">
+            🙏
+          </div>
+        )}
 
-            <tbody>
-              {filteredMembers.map((member) => (
-                <tr key={member.id} className="border-b">
-                  <td className="p-3">
-                    {member.profile_photo_url ? (
-                      <img
-                        src={member.profile_photo_url}
-                        alt={member.full_name || ""}
-                        className="h-12 w-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
-                        🙏
-                      </div>
-                    )}
-                  </td>
+        <div>
+          <h3 className="text-xl font-bold text-[#4b5f4a]">
+            {member.full_name}
+          </h3>
 
-                  <td className="p-3">{member.full_name || "-"}</td>
-                  <td className="p-3">{member.nickname || "-"}</td>
-                  <td className="p-3">{member.phone || "-"}</td>
-                  <td className="p-3">{member.email || "-"}</td>
-
-                  <td className="p-3">
-                    <div className="flex flex-wrap gap-2">
-                      <a
-                        href={`/members/${member.id}`}
-                        className="rounded-lg bg-green-700 px-3 py-2 text-white hover:bg-green-800"
-                      >
-                        ดูข้อมูล
-                      </a>
-
-                      <button
-                        onClick={() => startEdit(member)}
-                        className="rounded-lg bg-blue-700 px-3 py-2 text-white hover:bg-blue-800"
-                      >
-                        แก้ไข
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {filteredMembers.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-6 text-center text-gray-500">
-                    ไม่พบสมาชิก / No members found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <p className="text-gray-500">
+            {member.nickname || "-"}
+          </p>
         </div>
+      </div>
+
+      <div className="mt-4 space-y-2 text-sm">
+        <p>
+          <strong>Phone:</strong> {member.phone || "-"}
+        </p>
+
+        <p>
+          <strong>Email:</strong> {member.email || "-"}
+        </p>
+
+        <p>
+          <strong>Occupation:</strong>{" "}
+          {member.occupation || "-"}
+        </p>
+      </div>
+
+      <div className="mt-5 flex gap-2">
+        <a
+          href={`/members/${member.id}`}
+          className="rounded-lg bg-green-700 px-4 py-2 text-white hover:bg-green-800"
+        >
+          ดูข้อมูล
+        </a>
+
+        <button
+          onClick={() => startEdit(member)}
+          className="rounded-lg bg-blue-700 px-4 py-2 text-white hover:bg-blue-800"
+        >
+          แก้ไข
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
 
         {editingMember && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
