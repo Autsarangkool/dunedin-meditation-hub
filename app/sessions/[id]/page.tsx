@@ -108,20 +108,23 @@ export default function SessionDetailPage() {
   async function deleteCheckin(id: string) {
   if (!confirm("ต้องการลบรายการนี้ใช่ไหม?")) return;
 
-  const { error } = await supabase
+  console.log("DELETE ID =", id);
+
+  const result = await supabase
     .from("checkins")
     .delete()
     .eq("id", id);
 
-  if (error) {
-    alert(error.message);
+  console.log(result);
+
+  if (result.error) {
+    alert(result.error.message);
     return;
   }
 
-  setCheckins((prev) =>
-    prev.filter((item) => String(item.id) !== String(id))
-  );
+  alert("ลบสำเร็จ");
 
+  await loadData();
 }
 
   return (
