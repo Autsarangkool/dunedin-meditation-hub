@@ -73,6 +73,7 @@ export default function RegisterPage() {
 
         meditated_before: formData.get("meditated_before"),
         meditation_duration: formData.get("meditation_duration"),
+        meditation_preferences: formData.getAll("meditation_preferences"),
         joining_goals: formData.getAll("joining_goals"),
         joining_goal_other: formData.get("joining_goal_other"),
 
@@ -234,7 +235,39 @@ export default function RegisterPage() {
               </select>
             </div>
           </div>
+<div className="md:col-span-2 rounded-2xl border bg-[#fffdf8] p-5">
+  <h2 className="font-semibold text-[#4b5f4a]">
+    Preferred Meditation Style
+  </h2>
 
+  <p className="mt-1 text-sm text-gray-500">
+    Select all that apply
+  </p>
+
+  <div className="mt-4 grid gap-3 md:grid-cols-2">
+    {[
+      ["mindfulness_meditation", "Mindfulness Meditation"],
+      ["breathing_awareness", "Breathing Awareness"],
+      ["loving_kindness_metta", "Loving-Kindness (Metta)"],
+      ["walking_meditation", "Walking Meditation"],
+      ["reduce_stress", "Reduce Stress"],
+      ["relaxation", "Relaxation"],
+      ["mental_clarity", "Mental Clarity"],
+      ["spiritual_growth", "Spiritual Growth"],
+      ["improve_focus", "Improve Focus"],
+      ["happiness", "Happiness"],
+    ].map(([value, label]) => (
+      <label key={value} className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          name="meditation_preferences"
+          value={value}
+        />
+        {label}
+      </label>
+    ))}
+  </div>
+</div>
           <div className="md:col-span-2 rounded-2xl border bg-[#fffdf8] p-5">
             <h2 className="font-semibold text-[#4b5f4a]">
               Goals for Joining
