@@ -35,7 +35,7 @@ export default function RegisterPage() {
     const filePath = `profiles/${fileName}`;
 
     const { error } = await supabase.storage
-      .from("member-photos")
+      .from("profile-photos")
       .upload(filePath, photoFile, {
         cacheControl: "3600",
         upsert: false,
@@ -44,7 +44,7 @@ export default function RegisterPage() {
     if (error) throw error;
 
     const { data } = supabase.storage
-      .from("member-photos")
+      .from("profile-photos")
       .getPublicUrl(filePath);
 
     return data.publicUrl;

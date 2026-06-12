@@ -82,6 +82,7 @@ export default async function Home() {
           <nav className="mt-10 space-y-3">
             <SideLink href="/" icon="⌂" label="หน้าแรก" active />
             <SideLink href="/checkin" icon="✓" label="เช็คอินสมาชิก" />
+            <SideLink href="/staff" icon="👥" label="รายชื่อเจ้าหน้าที่" />
             <SideLink href="/checkin/scan" icon="▦" label="สแกน QR เช็คอิน" />
             <SideLink href="/sessions" icon="▣" label="จัดการรอบกิจกรรม" />
             <SideLink href="/members" icon="☷" label="สมาชิกทั้งหมด" />
@@ -180,7 +181,13 @@ export default async function Home() {
             <a href="/members">
               <MenuCard icon="👥" title="Members" subtitle="ฐานข้อมูลสมาชิก" />
             </a>
-
+            <a href="/staff">
+  <MenuCard
+    icon="👨‍💼"
+    title="Staff"
+    subtitle="รายชื่อเจ้าหน้าที่"
+  />
+</a>
             <a href="/import">
               <MenuCard icon="⇧" title="Import Excel" subtitle="นำเข้าข้อมูลสมาชิก" />
             </a>

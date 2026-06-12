@@ -37,6 +37,24 @@ export default function StaffPage() {
     loadStaff();
   }, []);
 
+  async function handleDelete(id: string) {
+    const confirmed = confirm("ต้องการลบ Staff คนนี้ใช่ไหม?");
+
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from("staff")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setStaff((prev) => prev.filter((person) => person.id !== id));
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f3ea] p-6">
       <div className="mx-auto max-w-6xl">
@@ -54,6 +72,13 @@ export default function StaffPage() {
         <p className="mt-1 text-gray-600">
           รายชื่อเจ้าหน้าที่และหน้าที่รับผิดชอบ
         </p>
+
+        <a
+          href="/staff/new"
+          className="mt-4 inline-block rounded-xl bg-green-700 px-5 py-3 font-semibold text-white shadow-sm hover:bg-green-800"
+        >
+          ➕ เพิ่มเจ้าหน้าที่
+        </a>
 
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {staff.map((person) => (
@@ -91,6 +116,23 @@ export default function StaffPage() {
                 <p><b>Email:</b> {person.email || "-"}</p>
                 <p><b>Status:</b> {person.status || "active"}</p>
                 <p><b>Notes:</b> {person.notes || "-"}</p>
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <a
+                  href={`/staff/${person.id}/edit`}
+                  className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  ✏️ Edit
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => handleDelete(person.id)}
+                  className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  🗑️ Delete
+                </button>
               </div>
             </div>
           ))}
