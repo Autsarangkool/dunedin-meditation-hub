@@ -11,6 +11,7 @@ export default function SessionsPage() {
   const [sessionNumber, setSessionNumber] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [meditationLeader, setMeditationLeader] = useState("");
+  const [selectedLeaderId, setSelectedLeaderId] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function SessionsPage() {
 setStaffs(staffData || []);
 
     setSessions(data || []);
+    
   }
 
   function resetForm() {
@@ -43,6 +45,7 @@ setStaffs(staffData || []);
     setSessionNumber("");
     setEventDate("");
     setMeditationLeader("");
+    setSelectedLeaderId("");
     setEditingId(null);
   }
 
@@ -74,6 +77,7 @@ setStaffs(staffData || []);
           session_number: finalSessionNumber,
           event_date: eventDate,
           meditation_leader: meditationLeader,
+          meditation_leader_id: selectedLeaderId || null,
         })
         .eq("id", editingId)
         .select()
@@ -95,6 +99,7 @@ setStaffs(staffData || []);
           session_number: finalSessionNumber,
           event_date: eventDate,
           meditation_leader: meditationLeader,
+          meditation_leader_id: selectedLeaderId || null,
         })
         .select()
         .single();
@@ -120,6 +125,7 @@ setStaffs(staffData || []);
     setSessionNumber(session.session_number || "");
     setEventDate(session.event_date || "");
     setMeditationLeader(session.meditation_leader || "");
+    setSelectedLeaderId(session.meditation_leader_id || "");
   }
 
   async function deleteSession(id: string) {
@@ -193,16 +199,25 @@ setStaffs(staffData || []);
             />
 
             <select
-  value={meditationLeader}
-  onChange={(e) => setMeditationLeader(e.target.value)}
+  value={selectedLeaderId}
+  onChange={(e) => {
+    const id = e.target.value;
+    setSelectedLeaderId(id);
+
+    const leader = staffs.find((staff) => staff.id === id);
+
+    setMeditationLeader(
+      leader ? `${leader.full_name} (${leader.nickname})` : ""
+    );
+  }}
   className="rounded-xl border p-3"
 >
   <option value="">เลือกผู้นำนั่งสมาธิ</option>
 
   {staffs.map((staff) => (
-    <option key={staff.id} value={`${staff.full_name} (${staff.nickname})`}>
-  {staff.full_name} ({staff.nickname})
-</option>
+    <option key={staff.id} value={staff.id}>
+      {staff.full_name} ({staff.nickname})
+    </option>
   ))}
 </select>
           </div>

@@ -13,25 +13,25 @@ export default function StaffDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (staffId) loadStaff();
-  }, [staffId]);
+    async function loadStaff() {
+      const { data, error } = await supabase
+        .from("staff")
+        .select("*")
+        .eq("id", staffId)
+        .single();
 
-  async function loadStaff() {
-    const { data, error } = await supabase
-      .from("staff")
-      .select("*")
-      .eq("id", staffId)
-      .single();
+      if (error) {
+        alert(error.message);
+        setLoading(false);
+        return;
+      }
 
-    if (error) {
-      alert(error.message);
+      setStaff(data);
       setLoading(false);
-      return;
     }
 
-    setStaff(data);
-    setLoading(false);
-  }
+    if (staffId) loadStaff();
+  }, [staffId]);
 
   if (loading) return <main className="p-8">กำลังโหลด...</main>;
 
@@ -40,7 +40,10 @@ export default function StaffDetailPage() {
   return (
     <main className="min-h-screen bg-[#f7f3ea] p-6">
       <div className="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-md">
-        <Link href="/staff" className="mb-6 inline-block rounded-xl bg-teal-600 px-4 py-2 font-medium text-white">
+        <Link
+          href="/staff"
+          className="mb-6 inline-block rounded-xl bg-teal-600 px-4 py-2 font-medium text-white"
+        >
           ← กลับรายชื่อเจ้าหน้าที่
         </Link>
 
@@ -61,12 +64,8 @@ export default function StaffDetailPage() {
             <h1 className="text-3xl font-bold text-[#4b5f4a]">
               {staff.full_name}
             </h1>
-            <p className="mt-1 text-xl text-gray-600">
-              {staff.nickname}
-            </p>
-            <p className="mt-2 text-emerald-700">
-              {staff.role || "-"}
-            </p>
+            <p className="mt-1 text-xl text-gray-600">{staff.nickname}</p>
+            <p className="mt-2 text-emerald-700">{staff.role || "-"}</p>
           </div>
         </div>
 

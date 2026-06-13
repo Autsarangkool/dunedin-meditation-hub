@@ -21,18 +21,34 @@ export default function SessionDetailPage() {
     setLoading(true);
 
     const { data: sessionData } = await supabase
-      .from("sessions")
-      .select("*")
-      .eq("id", sessionId)
-      .single();
+  .from("sessions")
+  .select("*")
+  .eq("id", sessionId)
+  .single();
 
+let leaderData = null;
+
+if (sessionData?.meditation_leader_id) {
+  const { data } = await supabase
+    .from("staff")
+    .select("id, full_name, nickname, role, department, phone, email, profile_photo_url")
+    .eq("id", sessionData.meditation_leader_id)
+    .single();
+
+  leaderData = data;
+}
+
+setSession({
+  ...sessionData,
+  leader: leaderData,
+});
     const { data: checkinData } = await supabase
       .from("checkins")
       .select("*, members(*)")
       .eq("session_id", sessionId)
       .order("checkin_time", { ascending: true });
 
-    setSession(sessionData);
+       console.log("SESSION =", sessionData);
     setCheckins(checkinData || []);
     setLoading(false);
   }
@@ -146,7 +162,38 @@ export default function SessionDetailPage() {
 
     <p className="text-sm font-medium text-emerald-700">
       ผู้นำนั่งสมาธิ: {session.meditation_leader || "-"}
-    </p>
+      </p>
+
+      {session.leader && (
+  <Link
+    href={`/staff/${session.leader.id}`}
+    className="mt-4 flex items-center gap-4 rounded-2xl border bg-[#fffdf8] p-4 hover:bg-[#f8f7f1] transition cursor-pointer"
+  >
+    {session.leader.profile_photo_url ? (
+      <img
+        src={session.leader.profile_photo_url}
+        alt=""
+        className="h-16 w-16 rounded-full object-cover"
+      />
+    ) : (
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200">
+        🙏
+      </div>
+    )}
+
+    <div>
+      <p className="font-bold text-[#4b5f4a]">
+        {session.leader.full_name}
+      </p>
+      <p className="text-sm text-gray-500">
+        {session.leader.nickname}
+      </p>
+      <p className="text-sm text-gray-500">
+        {session.leader.role || "-"}
+      </p>
+    </div>
+  </Link>
+)}
   </div>
 )}
 </div>
