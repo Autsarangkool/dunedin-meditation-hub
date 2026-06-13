@@ -40,6 +40,12 @@ export default async function Home() {
   const totalCheckinsThisMonth = monthCheckins?.length || 0;
   const totalCheckinsAllTime = allCheckins?.length || 0;
   const totalSessions = sessions?.length || 0;
+  const checkinTarget = 2222;
+const checkinRemaining = Math.max(checkinTarget - totalCheckinsAllTime, 0);
+const checkinProgress = Math.min(
+  (totalCheckinsAllTime / checkinTarget) * 100,
+  100
+);
 
   const latestMembers = members?.slice(0, 5) || [];
   const latestSessions = sessions?.slice(0, 5) || [];
@@ -60,15 +66,36 @@ export default async function Home() {
     attendanceCountByMember[memberId].count += 1;
   });
 
+  const excludedTopMemberNames = [
+  "Autsarangkool Phabsink",
+  "Phanurak Ranron",
+  "Phra Sangwian Khanchaiyaphum",
+  "Benjamaphorn Bounoon",
+  "PhraAkebordin Rattana Ph.D",
+  "Prasong Somnoi Ph.D",
+];
   const topMembers = Object.values(attendanceCountByMember)
-    .filter((item: any) => item.member)
-    .sort((a: any, b: any) => b.count - a.count)
-    .slice(0, 10);
+  .filter((item: any) => item.member)
+  .filter(
+    (item: any) =>
+      !excludedTopMemberNames.includes(item.member.full_name)
+  )
+  .sort((a: any, b: any) => b.count - a.count)
+  .slice(0, 10);
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(186,230,253,0.75),transparent_32%),radial-gradient(circle_at_top_right,rgba(167,243,208,0.65),transparent_35%),linear-gradient(135deg,#f8fafc_0%,#ecfeff_45%,#f0fdf4_100%)]">
-      <div className="flex min-h-screen">
-        <aside className="hidden w-72 shrink-0 border-r border-white/60 bg-white/65 p-6 shadow-xl backdrop-blur-xl lg:block">
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#f8f4ed] via-[#faf7f1] to-[#f0f7ef]">
+      <div className="pointer-events-none fixed inset-0 z-0">
+  <div className="absolute -right-32 -top-32 h-[520px] w-[520px] rounded-full bg-emerald-200/30 blur-3xl" />
+  <div className="absolute -left-32 bottom-10 h-[420px] w-[420px] rounded-full bg-sky-200/25 blur-3xl" />
+  <div className="absolute right-20 top-24 h-40 w-40 rounded-full bg-lime-100/40 blur-2xl" />
+</div>
+<div className="absolute left-1/2 top-20 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-white/30 blur-3xl" />
+<div className="absolute left-1/2 top-0 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-emerald-100/40 blur-3xl" />
+
+<div className="absolute right-1/4 bottom-20 h-[250px] w-[250px] rounded-full bg-emerald-100/30 blur-3xl" />
+      <div className="relative z-10 flex min-h-screen">
+        <aside className="hidden w-72 shrink-0 border-r border-white/70 bg-white/60 p-6 shadow-xl backdrop-blur-2xl lg:block">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-emerald-500 text-2xl text-white shadow-lg">
               ✦
@@ -92,13 +119,13 @@ export default async function Home() {
             <SideLink href="/reports" icon="⚙" label="จัดการผู้ดูแลระบบ" />
           </nav>
 
-          <div className="absolute bottom-6 left-6 right-6 rounded-3xl bg-white/80 p-4 shadow-xl backdrop-blur-md">
+          <div className="absolute bottom-6 left-6 right-6 rounded-3xl bg-white/85 backdrop-blur-xl p-4 shadow-xl backdrop-blur-md">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 text-white">
                 ●
               </div>
               <div>
-                <p className="font-bold text-slate-900">Admin</p>
+                <p className="font-bold text-[#24543d]">Admin</p>
                 <p className="text-sm text-slate-500">ผู้ดูแลระบบ</p>
               </div>
             </div>
@@ -108,9 +135,13 @@ export default async function Home() {
         <section className="mx-auto w-full max-w-7xl p-6 lg:p-10">
           <div className="flex items-start justify-between gap-6">
             <div>
-              <h1 className="text-5xl font-black tracking-tight bg-gradient-to-r from-sky-600 via-teal-500 to-emerald-500 bg-clip-text text-transparent drop-shadow-lg md:text-7xl">
+              <h1 className="text-5xl font-black tracking-tight text-emerald-700 drop-shadow-sm md:text-7xl">
                 Dunedin Meditation Hub
               </h1>
+              
+              <p className="mt-2 text-lg font-medium text-slate-600">
+  Mindfulness • Community • Wellbeing
+</p>
               <p className="mt-3 text-base font-medium text-slate-600">
                 ระบบเช็คอินและฐานข้อมูลผู้เข้าร่วมสมาธิ / Meditation Check-in & Member Database System
               </p>
@@ -119,12 +150,12 @@ export default async function Home() {
             <AuthButton />
           </div>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <div className="mt-8 grid gap-6 lg:grid-cols-3">
             <BigStat
               icon="👥"
               title="สมาชิกทั้งหมด / Total Members"
               value={totalMembers}
-              unit="คน"
+              unit="ท่าน"
               color="text-blue-600"
             />
 
@@ -134,6 +165,13 @@ export default async function Home() {
               value={totalCheckinsAllTime}
               unit="ครั้ง"
               color="text-emerald-600"
+            />
+
+            <GoalCard
+            current={totalCheckinsAllTime}
+            target={checkinTarget}
+            remaining={checkinRemaining}
+            progress={checkinProgress}
             />
           </div>
 
@@ -298,6 +336,58 @@ export default async function Home() {
   );
 }
 
+function GoalCard({
+  current,
+  target,
+  remaining,
+  progress,
+}: {
+  current: number;
+  target: number;
+  remaining: number;
+  progress: number;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-emerald-200 bg-white/85 p-6 shadow-xl backdrop-blur-md">
+      <p className="text-lg font-black text-slate-700">
+        เป้าหมายเช็คอินสะสม
+      </p>
+
+      <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+        <div>
+          <p className="text-xs font-bold text-slate-500">เป้าหมาย</p>
+          <p className="text-2xl font-black text-slate-900">
+            {target.toLocaleString()}
+          </p>
+          <p className="text-xs text-slate-500">ครั้ง</p>
+        </div>
+
+        <div>
+          <p className="text-xs font-bold text-slate-500">เหลืออีก</p>
+          <p className="text-2xl font-black text-slate-900">
+            {remaining.toLocaleString()}
+          </p>
+          <p className="text-xs text-slate-500">ครั้ง</p>
+        </div>
+
+        <div>
+          <p className="text-xs font-bold text-slate-500">บรรลุแล้ว</p>
+          <p className="text-2xl font-black text-emerald-600">
+            {progress.toFixed(2)}%
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-200">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-600"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function SideLink({
   href,
   icon,
@@ -314,7 +404,7 @@ function SideLink({
       href={href}
       className={`flex items-center gap-3 rounded-2xl px-4 py-3 font-semibold transition ${
         active
-          ? "bg-blue-50 text-blue-600 shadow-sm"
+  ? "bg-emerald-50 text-emerald-700 shadow-sm"
           : "text-slate-600 hover:bg-white/70 hover:text-teal-600"
       }`}
     >
@@ -395,7 +485,7 @@ function MenuCard({
   return (
     <div className="h-full rounded-3xl border border-white/70 bg-white/85 p-6 shadow-lg backdrop-blur-md transition-all hover:-translate-y-1 hover:shadow-2xl">
       <div className="flex items-center gap-5">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-3xl text-blue-600">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-3xl ">
           {icon}
         </div>
         <div>

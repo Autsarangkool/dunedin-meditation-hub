@@ -136,15 +136,20 @@ export default function SessionDetailPage() {
               รายชื่อผู้เข้าร่วม Session
             </h1>
 
-            {session && (
-              <p className="mt-2 text-gray-600">
-                {session.session_name}{" "}
-                {session.session_number ? `(${session.session_number})` : ""} ·{" "}
-                {session.event_date || "-"}
-              </p>
-            )}
-          </div>
+          {session && (
+  <div>
+    <p className="mt-2 text-gray-600">
+      {session.session_name}{" "}
+      {session.session_number ? `(${session.session_number})` : ""} -{" "}
+      {session.event_date || "-"}
+    </p>
 
+    <p className="text-sm font-medium text-emerald-700">
+      ผู้นำนั่งสมาธิ: {session.meditation_leader || "-"}
+    </p>
+  </div>
+)}
+</div>
           <div className="flex gap-3">
             <button
               onClick={exportCSV}

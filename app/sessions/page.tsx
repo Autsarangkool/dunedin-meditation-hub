@@ -6,9 +6,11 @@ import { supabase } from "@/lib/supabase";
 
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<any[]>([]);
+  const [staffs, setStaffs] = useState<any[]>([]);
   const [sessionName, setSessionName] = useState("");
   const [sessionNumber, setSessionNumber] = useState("");
   const [eventDate, setEventDate] = useState("");
+  const [meditationLeader, setMeditationLeader] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,6 +28,13 @@ export default function SessionsPage() {
       return;
     }
 
+    const { data: staffData } = await supabase
+  .from("staff")
+  .select("id, nickname, full_name")
+  .order("nickname");
+
+setStaffs(staffData || []);
+
     setSessions(data || []);
   }
 
@@ -33,6 +42,7 @@ export default function SessionsPage() {
     setSessionName("");
     setSessionNumber("");
     setEventDate("");
+    setMeditationLeader("");
     setEditingId(null);
   }
 
@@ -63,6 +73,7 @@ export default function SessionsPage() {
           session_name: sessionName,
           session_number: finalSessionNumber,
           event_date: eventDate,
+          meditation_leader: meditationLeader,
         })
         .eq("id", editingId)
         .select()
@@ -83,6 +94,7 @@ export default function SessionsPage() {
           session_name: sessionName,
           session_number: finalSessionNumber,
           event_date: eventDate,
+          meditation_leader: meditationLeader,
         })
         .select()
         .single();
@@ -107,24 +119,38 @@ export default function SessionsPage() {
     setSessionName(session.session_name || "");
     setSessionNumber(session.session_number || "");
     setEventDate(session.event_date || "");
+    setMeditationLeader(session.meditation_leader || "");
   }
 
   async function deleteSession(id: string) {
-    if (!confirm("ต้องการลบรุ่นนี้ใช่ไหม?")) return;
+  if (!confirm("ต้องการลบรุ่นนี้ใช่ไหม?")) return;
 
-    const { error } = await supabase.from("sessions").delete().eq("id", id);
+  console.log("DELETE SESSION ID =", id);
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+  const { data, error } = await supabase
+    .from("sessions")
+    .delete()
+    .eq("id", id)
+    .select();
 
-    setSessions((prev) => prev.filter((session) => session.id !== id));
+  console.log("DELETE RESULT =", { data, error });
 
-    if (editingId === id) {
-      resetForm();
-    }
+  if (error) {
+    alert(error.message);
+    return;
   }
+
+  if (!data || data.length === 0) {
+    alert("ลบไม่สำเร็จ: ไม่พบสิทธิ์ลบ หรือข้อมูลไม่ได้ถูกลบจาก Supabase");
+    return;
+  }
+
+  setSessions((prev) => prev.filter((session) => session.id !== id));
+
+  if (editingId === id) {
+    resetForm();
+  }
+}
 
   return (
     <main className="min-h-screen bg-[#f7f3ea] p-6">
@@ -165,6 +191,20 @@ export default function SessionsPage() {
               onChange={(e) => setEventDate(e.target.value)}
               className="rounded-xl border p-3"
             />
+
+            <select
+  value={meditationLeader}
+  onChange={(e) => setMeditationLeader(e.target.value)}
+  className="rounded-xl border p-3"
+>
+  <option value="">เลือกผู้นำนั่งสมาธิ</option>
+
+  {staffs.map((staff) => (
+    <option key={staff.id} value={`${staff.full_name} (${staff.nickname})`}>
+  {staff.full_name} ({staff.nickname})
+</option>
+  ))}
+</select>
           </div>
 
           <div className="mt-4 flex gap-3">
@@ -204,6 +244,9 @@ export default function SessionsPage() {
                   <p className="text-sm text-gray-600">
                     {session.session_number || "-"} · {session.event_date || "-"}
                   </p>
+                  <p className="text-sm font-medium text-emerald-700">
+  ผู้นำนั่งสมาธิ: {session.meditation_leader || "-"}
+</p>
                 </div>
 
                 <div className="flex gap-2">

@@ -11,6 +11,7 @@ export default function CheckinPage() {
   const [selectedSessionId, setSelectedSessionId] = useState("");
   const [search, setSearch] = useState("");
   const [latestCheckin, setLatestCheckin] = useState<any>(null);
+  const [latestFiveCheckins, setLatestFiveCheckins] = useState<any[]>([]);
 
   useEffect(() => {
     loadMembers();
@@ -73,6 +74,7 @@ export default function CheckinPage() {
     }
 
     setTodayCheckins(data || []);
+    setLatestFiveCheckins((data || []).slice(0, 5));
 
     if (data && data.length > 0) {
       const latest = data[0];
@@ -251,26 +253,87 @@ export default function CheckinPage() {
               รายชื่อสมาชิก / Members
             </h2>
 
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="ค้นหาชื่อ ชื่อเล่น เบอร์โทร หรืออีเมล / Search name, nickname, phone or email"
-              className="mt-4 w-full rounded-xl border p-3"
-            />
+            <div className="relative mt-4">
+  <input
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    placeholder="ค้นหาชื่อ ชื่อเล่น เบอร์โทร หรืออีเมล / Search name, nickname, phone or email"
+    className="w-full rounded-xl border p-3"
+  />
 
-            {!shouldShowMembers && (
-              <div className="mt-4 rounded-2xl border bg-[#fffdf8] p-8 text-center text-gray-500">
-                <div className="mb-3 text-4xl">👥</div>
-                <p className="font-semibold text-[#4b5f4a]">
-                  รายชื่อสมาชิกถูกซ่อนไว้
-                </p>
-                <p className="mt-2">
-                  พิมพ์ค้นหาชื่อ ชื่อเล่น เบอร์โทร หรืออีเมล เพื่อแสดงรายชื่อสำหรับเช็คอิน
-                </p>
+  {search.trim() !== "" && filteredMembers.length > 0 && (
+    <div className="absolute z-50 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border bg-white shadow-lg">
+      {filteredMembers.slice(0, 10).map((member) => (
+        <div
+          key={member.id}
+          className="flex items-center justify-between border-b p-3 hover:bg-gray-50"
+        >
+          <div>
+            <div className="font-semibold">{member.full_name}</div>
+            <div className="text-sm text-gray-500">
+              {member.nickname || member.phone || "-"}
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleCheckin(member)}
+            className="rounded-lg bg-green-700 px-3 py-2 text-white"
+          >
+            Check-in
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+
+            <div className="mt-4 rounded-2xl border bg-[#fffdf8] p-5">
+  <h3 className="font-semibold text-[#4b5f4a]">
+    เช็คอินล่าสุด 5 คน
+  </h3>
+
+  <div className="mt-4 space-y-3">
+    {latestFiveCheckins.length > 0 ? (
+      latestFiveCheckins.map((item) => (
+        <div
+          key={item.id}
+          className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm"
+        >
+          <div className="flex items-center gap-3">
+            {item.members?.profile_photo_url ? (
+              <img
+                src={item.members.profile_photo_url}
+                alt=""
+                className="h-10 w-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+                🙏
               </div>
             )}
 
-            {shouldShowMembers && (
+            <div>
+              <p className="font-semibold text-slate-900">
+                {item.members?.full_name || "-"}
+              </p>
+              <p className="text-sm text-gray-500">
+                {item.members?.nickname || "-"}
+              </p>
+            </div>
+          </div>
+
+          <span className="text-sm font-semibold text-green-700">✓</span>
+        </div>
+      ))
+    ) : (
+      <p className="text-center text-gray-500">
+        ยังไม่มีเช็คอินใน Session นี้
+      </p>
+    )}
+  </div>
+</div>
+
+            {shouldShowMembers && search.trim() === "" && (
               <div className="mt-4 max-h-[600px] space-y-3 overflow-y-auto pr-2">
                 {filteredMembers.map((member) => {
                   const checked = alreadyCheckedIn(member.id);
@@ -317,10 +380,54 @@ export default function CheckinPage() {
                 })}
 
                 {filteredMembers.length === 0 && (
-                  <div className="rounded-xl border bg-[#fffdf8] p-6 text-center text-gray-500">
-                    ไม่พบสมาชิกที่ค้นหา / No members found
-                  </div>
-                )}
+  <div className="rounded-2xl border bg-[#fffdf8] p-5">
+    <h3 className="font-semibold text-[#4b5f4a]">
+      เช็คอินล่าสุด 5 คน
+    </h3>
+
+    <div className="mt-4 space-y-3">
+      {latestFiveCheckins.length > 0 ? (
+        latestFiveCheckins.map((item) => (
+          <div
+            key={item.id}
+            className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm"
+          >
+            <div className="flex items-center gap-3">
+              {item.members?.profile_photo_url ? (
+                <img
+                  src={item.members.profile_photo_url}
+                  alt=""
+                  className="h-10 w-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+                  🙏
+                </div>
+              )}
+
+              <div>
+                <p className="font-semibold text-slate-900">
+                  {item.members?.full_name || "-"}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {item.members?.nickname || "-"}
+                </p>
+              </div>
+            </div>
+
+            <span className="text-sm font-semibold text-green-700">
+              ✓
+            </span>
+          </div>
+        ))
+      ) : (
+        <p className="text-center text-gray-500">
+          ยังไม่มีเช็คอินใน Session นี้
+        </p>
+      )}
+    </div>
+  </div>
+)}
               </div>
             )}
           </section>
