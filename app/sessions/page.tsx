@@ -132,7 +132,14 @@ export default function SessionsPage() {
   }
 
   async function deleteSession(id: string) {
-    if (!confirm("ต้องการลบรุ่นนี้ใช่ไหม?")) return;
+    const confirmText = prompt(
+  "คุณจะลบรุ่นนี้จริง ๆ ใช่มั้ย?\n\nถ้าต้องการลบจริง ให้พิมพ์คำว่า DELETE"
+);
+
+if (confirmText !== "DELETE") {
+  alert("ยกเลิกการลบรุ่น");
+  return;
+}
 
     console.log("DELETE SESSION ID =", id);
 
