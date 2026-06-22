@@ -124,7 +124,7 @@ export default function CheckinPage() {
       checkin_date: getToday(),
     },
     {
-      onConflict: "member_id,session_id",
+      onConflict: "checkins_member_session_unique",
     }
   )
   .select("*, members(*), sessions(*)")
@@ -181,385 +181,306 @@ export default function CheckinPage() {
   const shouldShowMembers = search.trim() !== "";
 
   return (
-    <main className="min-h-screen bg-[#f7f3ea] p-6">
-      <div className="mx-auto max-w-6xl rounded-3xl bg-white p-8 shadow-md">
+  <main className="min-h-screen bg-gradient-to-br from-[#edf6e8] via-[#f7f3ea] to-[#fff2d8] p-6">
+    <div className="mx-auto max-w-5xl space-y-6">
+
+      <section className="rounded-[2rem] bg-white/90 p-8 shadow-2xl ring-1 ring-black/5">
         <a
           href="/"
-          className="mb-4 inline-block rounded-xl bg-teal-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-teal-700"
+          className="inline-block rounded-xl bg-teal-600 px-4 py-2 font-semibold text-white shadow-sm hover:bg-teal-700"
         >
           🏠 กลับหน้าหลัก
         </a>
 
-        <h1 className="text-3xl font-bold text-[#4b5f4a]">
-          เช็คอินสมาชิก / Member Check-in
-        </h1>
-
-        <p className="mt-2 text-gray-600">
-          เลือก Session แล้วค้นหาสมาชิกเพื่อเช็คอิน / Select a session and check in members
-        </p>
-
-        <div className="mt-6 rounded-2xl border border-[#e5dfcf] bg-[#fffdf8] p-5">
-          <label className="font-semibold text-[#4b5f4a]">
-            เลือก Session / Select Session
-          </label>
-
-          <select
-            value={selectedSessionId}
-            onChange={(e) => setSelectedSessionId(e.target.value)}
-            className="mt-3 w-full rounded-xl border p-3"
-          >
-            {sessions.map((session) => (
-              <option key={session.id} value={session.id}>
-                {session.session_name}{" "}
-                {session.session_number ? `(${session.session_number})` : ""} -{" "}
-                {session.event_date || ""}
-              </option>
-            ))}
-          </select>
-
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href="/sessions"
-              className="rounded-xl bg-green-700 px-5 py-3 font-semibold text-white hover:bg-green-800"
-            >
-              + สร้างรุ่นใหม่ / Create New Session
-            </Link>
-
-            <Link
-              href="/checkin/manual"
-              className="rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800"
-            >
-              + เพิ่มเช็คอินย้อนหลัง
-            </Link>
-
-            <button
-              onClick={loadSessions}
-              className="rounded-xl border px-5 py-3 font-semibold text-[#4b5f4a] hover:bg-[#f7f3ea]"
-            >
-              โหลด Session ใหม่ / Refresh
-            </button>
-          </div>
-
-          {sessions.length === 0 && (
-            <p className="mt-3 text-sm text-red-600">
-              ยังไม่มี Session กรุณาสร้างที่หน้า /sessions ก่อน
-            </p>
-          )}
-        </div>
-
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <section>
-            <h2 className="text-xl font-semibold text-[#4b5f4a]">
-              รายชื่อสมาชิก / Members
-            </h2>
-
-            <div className="relative mt-4">
-  <input
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    placeholder="ค้นหาชื่อ ชื่อเล่น เบอร์โทร หรืออีเมล / Search name, nickname, phone or email"
-    className="w-full rounded-xl border p-3"
-  />
-
-  {search.trim() !== "" && filteredMembers.length > 0 && (
-    <div className="absolute z-50 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border bg-white shadow-lg">
-      {filteredMembers.slice(0, 10).map((member) => (
-        <div
-          key={member.id}
-          className="flex items-center justify-between border-b p-3 hover:bg-gray-50"
-        >
+        <div className="mt-6 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="font-semibold">{member.full_name}</div>
-            <div className="text-sm text-gray-500">
-              {member.nickname || member.phone || "-"}
-            </div>
+            <p className="text-sm font-bold uppercase tracking-wide text-emerald-700">
+              Dunedin Meditation Hub
+            </p>
+
+            <h1 className="mt-2 text-5xl font-black tracking-tight text-[#3f573f]">
+              🙏 Member Check-in
+            </h1>
+
+            <p className="mt-3 text-lg text-gray-600">
+              ค้นหาสมาชิก แล้วเช็คอินก่อนเริ่มปฏิบัติธรรม
+            </p>
           </div>
+
+          <div className="rounded-3xl bg-[#f7f3ea] p-5 text-right shadow-inner">
+            <p className="text-sm text-gray-500">Session ปัจจุบัน</p>
+            <p className="text-2xl font-black text-[#4b5f4a]">
+              {selectedSession()?.session_name || "-"}
+            </p>
+            <p className="text-sm text-gray-500">
+              {selectedSession()?.session_number || ""} •{" "}
+              {selectedSession()?.event_date || ""}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[2rem] bg-white/90 p-6 shadow-xl ring-1 ring-black/5">
+        <label className="font-bold text-[#4b5f4a]">
+          เลือก Session / Select Session
+        </label>
+
+        <select
+          value={selectedSessionId}
+          onChange={(e) => setSelectedSessionId(e.target.value)}
+          className="mt-3 w-full rounded-2xl border-2 border-[#dfe6da] bg-white p-4 text-lg font-semibold focus:border-emerald-500 focus:outline-none"
+        >
+          {sessions.map((session) => (
+            <option key={session.id} value={session.id}>
+              {session.session_name}{" "}
+              {session.session_number ? `(${session.session_number})` : ""} -{" "}
+              {session.event_date || ""}
+            </option>
+          ))}
+        </select>
+
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href="/sessions"
+            className="rounded-xl bg-green-700 px-5 py-3 font-semibold text-white hover:bg-green-800"
+          >
+            + สร้างรุ่นใหม่
+          </Link>
+
+          <Link
+            href="/checkin/manual"
+            className="rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800"
+          >
+            + เช็คอินย้อนหลัง
+          </Link>
 
           <button
-            onClick={() => handleCheckin(member)}
-            className="rounded-lg bg-green-700 px-3 py-2 text-white"
+            onClick={loadSessions}
+            className="rounded-xl border px-5 py-3 font-semibold text-[#4b5f4a] hover:bg-[#f7f3ea]"
           >
-            Check-in
+            Refresh
           </button>
         </div>
-      ))}
-    </div>
-  )}
-</div>
+      </section>
 
-            <div className="mt-4 rounded-2xl border bg-[#fffdf8] p-5">
-  <h3 className="font-semibold text-[#4b5f4a]">
-    เช็คอินล่าสุด 5 คน
-  </h3>
+      <section className="rounded-[2rem] bg-white/90 p-6 shadow-xl ring-1 ring-black/5">
+        <p className="text-2xl font-black text-[#4b5f4a]">
+          🔍 ค้นหาสมาชิกเพื่อเช็คอิน
+        </p>
 
-  <div className="mt-4 space-y-3">
-    {latestFiveCheckins.length > 0 ? (
-      latestFiveCheckins.map((item) => (
-        <div
-          key={item.id}
-          className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm"
-        >
-          <div className="flex items-center gap-3">
-            {item.members?.profile_photo_url ? (
-              <img
-                src={item.members.profile_photo_url}
-                alt=""
-                className="h-10 w-10 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
-                🙏
-              </div>
-            )}
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="พิมพ์ชื่อ ชื่อเล่น เบอร์โทร หรืออีเมล"
+          className="mt-4 w-full rounded-3xl border-2 border-[#dfe6da] bg-white p-5 text-2xl font-semibold shadow-sm focus:border-emerald-500 focus:outline-none"
+        />
 
-            <div>
-              <p className="font-semibold text-slate-900">
-                {item.members?.full_name || "-"}
-              </p>
-              <p className="text-sm text-gray-500">
-                {item.members?.nickname || "-"}
-              </p>
-            </div>
-          </div>
+        {search.trim() !== "" && (
+          <div className="mt-4 max-h-96 overflow-y-auto rounded-3xl border bg-white shadow-lg">
+            {filteredMembers.slice(0, 10).map((member) => {
+              const checked = alreadyCheckedIn(member.id);
 
-          <span className="text-sm font-semibold text-green-700">✓</span>
-        </div>
-      ))
-    ) : (
-      <p className="text-center text-gray-500">
-        ยังไม่มีเช็คอินใน Session นี้
-      </p>
-    )}
-  </div>
-</div>
-
-            {shouldShowMembers && search.trim() === "" && (
-              <div className="mt-4 max-h-[600px] space-y-3 overflow-y-auto pr-2">
-                {filteredMembers.map((member) => {
-                  const checked = alreadyCheckedIn(member.id);
-
-                  return (
-                    <div
-                      key={member.id}
-                      className="flex items-center justify-between rounded-xl border p-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        {member.profile_photo_url ? (
-                          <img
-                            src={member.profile_photo_url}
-                            alt=""
-                            className="h-12 w-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-xl">
-                            🙏
-                          </div>
-                        )}
-
-                        <div>
-                          <p className="font-semibold">{member.full_name}</p>
-                          <p className="text-sm text-gray-500">
-                            {member.nickname || member.phone || "-"}
-                          </p>
-                        </div>
+              return (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between border-b p-4 hover:bg-emerald-50"
+                >
+                  <div className="flex items-center gap-4">
+                    {member.profile_photo_url ? (
+                      <img
+                        src={member.profile_photo_url}
+                        alt=""
+                        className="h-14 w-14 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-200 text-2xl">
+                        🙏
                       </div>
+                    )}
 
-                      <button
-                        onClick={() => handleCheckin(member)}
-                        disabled={checked || !selectedSessionId}
-                        className={
-                          checked || !selectedSessionId
-                            ? "rounded-lg bg-gray-300 px-4 py-2 text-gray-600"
-                            : "rounded-lg bg-green-700 px-4 py-2 text-white hover:bg-green-800"
-                        }
-                      >
-                        {checked ? "เช็คอินแล้ว" : "Check-in"}
-                      </button>
+                    <div>
+                      <p className="text-lg font-bold text-slate-900">
+                        {member.full_name}
+                      </p>
+                      <p className="text-gray-500">
+                        {member.nickname || member.phone || "-"}
+                      </p>
                     </div>
-                  );
-                })}
+                  </div>
 
-                {filteredMembers.length === 0 && (
-  <div className="rounded-2xl border bg-[#fffdf8] p-5">
-    <h3 className="font-semibold text-[#4b5f4a]">
-      เช็คอินล่าสุด 5 คน
-    </h3>
+                  <button
+                    onClick={() => handleCheckin(member)}
+                    disabled={checked || !selectedSessionId}
+                    className={
+                      checked || !selectedSessionId
+                        ? "rounded-xl bg-gray-300 px-5 py-3 font-semibold text-gray-600"
+                        : "rounded-xl bg-green-700 px-5 py-3 font-semibold text-white shadow hover:bg-green-800"
+                    }
+                  >
+                    {checked ? "เช็คอินแล้ว" : "Check-in"}
+                  </button>
+                </div>
+              );
+            })}
 
-    <div className="mt-4 space-y-3">
-      {latestFiveCheckins.length > 0 ? (
-        latestFiveCheckins.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm"
-          >
-            <div className="flex items-center gap-3">
-              {item.members?.profile_photo_url ? (
+            {filteredMembers.length === 0 && (
+              <p className="p-6 text-center text-gray-500">
+                ไม่พบสมาชิกที่ค้นหา
+              </p>
+            )}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-[2rem] bg-white/90 p-6 shadow-xl ring-1 ring-black/5">
+        <h2 className="text-2xl font-black text-[#4b5f4a]">
+          🎉 เช็คอินล่าสุด / Latest Check-in
+        </h2>
+
+        {latestCheckin ? (
+          <div className="mt-5 flex flex-col items-center rounded-[2rem] border border-green-200 bg-green-50 p-8 text-center shadow-lg">
+            <div className="mb-4 h-40 w-40 overflow-hidden rounded-full border-4 border-green-300 bg-white">
+              {latestCheckin.members?.profile_photo_url ? (
                 <img
-                  src={item.members.profile_photo_url}
+                  src={latestCheckin.members.profile_photo_url}
                   alt=""
-                  className="h-10 w-10 rounded-full object-cover"
+                  className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+                <div className="flex h-full w-full items-center justify-center text-6xl">
                   🙏
                 </div>
               )}
-
-              <div>
-                <p className="font-semibold text-slate-900">
-                  {item.members?.full_name || "-"}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {item.members?.nickname || "-"}
-                </p>
-              </div>
             </div>
 
-            <span className="text-sm font-semibold text-green-700">
-              ✓
-            </span>
+            <h3 className="text-4xl font-black text-slate-900">
+              {latestCheckin.members?.full_name || "-"}
+            </h3>
+
+            <p className="mt-1 text-2xl text-gray-600">
+              {latestCheckin.members?.nickname || ""}
+            </p>
+
+            <p className="mt-5 text-3xl font-black text-green-700">
+              เช็คอินสำเร็จ ✅
+            </p>
+
+            <p className="mt-3 text-gray-600">
+              {latestCheckin.checkin_time
+                ? new Date(latestCheckin.checkin_time).toLocaleTimeString()
+                : ""}
+            </p>
+
+            <p className="mt-4 rounded-2xl bg-white px-5 py-3 text-lg font-bold text-green-700">
+              มาทั้งหมด {latestCheckin.totalVisits || 0} ครั้ง
+            </p>
           </div>
-        ))
-      ) : (
-        <p className="text-center text-gray-500">
-          ยังไม่มีเช็คอินใน Session นี้
-        </p>
-      )}
-    </div>
-  </div>
-)}
-              </div>
-            )}
-          </section>
+        ) : (
+          <div className="mt-5 rounded-[2rem] border bg-white p-8 text-center shadow-sm">
+            <div className="text-7xl animate-pulse">🙏</div>
+            <p className="mt-4 text-2xl font-black text-[#4b5f4a]">
+              Waiting for Check-in
+            </p>
+            <p className="mt-2 text-gray-500">
+              เมื่อเช็คอินสำเร็จ สมาชิกคนล่าสุดจะแสดงตรงนี้
+            </p>
+          </div>
+        )}
+      </section>
 
-          <section className="rounded-2xl border border-[#e5dfcf] bg-[#fffdf8] p-6">
-            <h2 className="text-xl font-semibold text-[#4b5f4a]">
-              เช็คอินล่าสุด / Latest Check-in
-            </h2>
+      <section className="rounded-[2rem] bg-white/90 p-6 shadow-xl ring-1 ring-black/5">
+        <h2 className="text-2xl font-black text-[#4b5f4a]">
+          เช็คอินล่าสุด 5 คน
+        </h2>
 
-            {latestCheckin ? (
-              <div className="mt-4 rounded-3xl border border-green-200 bg-green-50 p-8 text-center shadow-lg">
-                <div className="mb-3 text-6xl">✅</div>
-
-                <div className="mx-auto mb-4 h-40 w-40 overflow-hidden rounded-full border-4 border-green-300 bg-white">
-                  {latestCheckin.members?.profile_photo_url ? (
-                    <img
-                      src={latestCheckin.members.profile_photo_url}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-6xl">
-                      🙏
-                    </div>
-                  )}
-                </div>
-
-                <h3 className="text-3xl font-bold text-gray-900">
-                  {latestCheckin.members?.full_name || "-"}
-                </h3>
-
-                <p className="mt-2 text-xl text-gray-600">
-                  {latestCheckin.members?.nickname ||
-                    latestCheckin.members?.phone ||
-                    ""}
-                </p>
-
-                <p className="mt-5 text-2xl font-semibold text-green-700">
-                  เช็คอินสำเร็จ / Check-in Successful
-                </p>
-
-                <p className="mt-3 text-lg text-gray-600">
-                  {latestCheckin.sessions?.session_name ||
-                    latestCheckin.session_name}
-                </p>
-
-                <p className="mt-1 text-gray-500">
-                  {latestCheckin.checkin_time
-                    ? new Date(latestCheckin.checkin_time).toLocaleTimeString()
-                    : ""}
-                </p>
-
-                <div className="mt-6 rounded-2xl border border-green-200 bg-white p-4">
-                  <p className="text-sm text-gray-500">
-                    มาทั้งหมด / Total Attendances
-                  </p>
-                  <p className="mt-1 text-3xl font-bold text-green-700">
-                    {latestCheckin.totalVisits || 0} ครั้ง
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4 rounded-3xl border bg-white p-8 text-center text-gray-500">
-                <div className="mb-3 text-6xl">🙏</div>
-                <p className="text-xl font-semibold">รอการเช็คอินล่าสุด</p>
-                <p className="mt-1">เมื่อเช็คอินสำเร็จ จะแสดงตรงนี้แบบใหญ่</p>
-              </div>
-            )}
-          </section>
-        </div>
-
-        <div className="mt-10 rounded-2xl border border-[#e5dfcf] bg-[#fffdf8] p-6">
-          <h2 className="text-xl font-semibold text-[#4b5f4a]">
-            รายการเช็คอินวันนี้ / Today&apos;s Check-ins
-          </h2>
-
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="p-3 text-left">สมาชิก / Member</th>
-                  <th className="p-3 text-left">เวลา / Time</th>
-                  <th className="p-3 text-left">Session</th>
-                  <th className="p-3 text-center">จัดการ / Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {todayCheckins.map((checkin) => (
-                  <tr key={checkin.id} className="border-b">
-                    <td className="p-3">
-                      {checkin.members?.full_name || "-"}
-                    </td>
-
-                    <td className="p-3">
-                      {checkin.checkin_time
-                        ? new Date(checkin.checkin_time).toLocaleTimeString()
-                        : "-"}
-                    </td>
-
-                    <td className="p-3">
-                      {checkin.sessions?.session_name ||
-                        checkin.session_name ||
-                        "-"}
-                    </td>
-
-                    <td className="p-3 text-center">
-                      <button
-                        onClick={() => handleDeleteCheckin(checkin.id)}
-                        className="rounded-lg bg-red-600 px-3 py-2 text-white hover:bg-red-700"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-
-                {todayCheckins.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="p-6 text-center text-gray-500"
-                    >
-                      ยังไม่มี Check-in วันนี้ / No check-ins today
-                    </td>
-                  </tr>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {latestFiveCheckins.length > 0 ? (
+            latestFiveCheckins.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-3 rounded-2xl bg-[#fffdf8] p-4 shadow-sm"
+              >
+                {item.members?.profile_photo_url ? (
+                  <img
+                    src={item.members.profile_photo_url}
+                    alt=""
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
+                    🙏
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
+
+                <div>
+                  <p className="font-bold">{item.members?.full_name || "-"}</p>
+                  <p className="text-sm text-gray-500">
+                    {item.members?.nickname || "-"}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500">ยังไม่มีเช็คอินใน Session นี้</p>
+          )}
         </div>
-      </div>
-    </main>
-  );
+      </section>
+
+      <section className="rounded-[2rem] bg-white/90 p-6 shadow-xl ring-1 ring-black/5">
+        <h2 className="text-2xl font-black text-[#4b5f4a]">
+          รายการเช็คอินวันนี้ / Today&apos;s Check-ins
+        </h2>
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b bg-gray-50">
+                <th className="p-3 text-left">สมาชิก</th>
+                <th className="p-3 text-left">เวลา</th>
+                <th className="p-3 text-left">Session</th>
+                <th className="p-3 text-center">จัดการ</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {todayCheckins.map((checkin) => (
+                <tr key={checkin.id} className="border-b">
+                  <td className="p-3">
+                    {checkin.members?.full_name || "-"}
+                  </td>
+                  <td className="p-3">
+                    {checkin.checkin_time
+                      ? new Date(checkin.checkin_time).toLocaleTimeString()
+                      : "-"}
+                  </td>
+                  <td className="p-3">
+                    {checkin.sessions?.session_name ||
+                      checkin.session_name ||
+                      "-"}
+                  </td>
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() => handleDeleteCheckin(checkin.id)}
+                      className="rounded-lg bg-red-600 px-3 py-2 text-white hover:bg-red-700"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+
+              {todayCheckins.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-6 text-center text-gray-500">
+                    ยังไม่มี Check-in วันนี้ / No check-ins today
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+);
 }
