@@ -4,14 +4,58 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
+function getInitials(name?: string | null) {
+  if (!name) return "?"
+
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+function formatCheckinTime(value?: string | null) {
+  if (!value) return "—"
+
+  try {
+    return new Intl.DateTimeFormat("en-NZ", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Pacific/Auckland",
+    }).format(new Date(value))
+  } catch {
+    return "—"
+  }
+}
+
+function formatSessionDate(value?: string | null) {
+  if (!value) return "Today"
+
+  try {
+    return new Intl.DateTimeFormat("en-NZ", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      timeZone: "Pacific/Auckland",
+    }).format(new Date(value))
+  } catch {
+    return "Today"
+  }
+}
+
 export default function CheckinPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [todayCheckins, setTodayCheckins] = useState<any[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState("");
   const [search, setSearch] = useState("");
+  const [sessionDropdownOpen, setSessionDropdownOpen] = useState(false);
   const [latestCheckin, setLatestCheckin] = useState<any>(null);
+  const [latestMemberTotalVisits, setLatestMemberTotalVisits] = useState(0);
   const [latestFiveCheckins, setLatestFiveCheckins] = useState<any[]>([]);
+  const checkedInCount = todayCheckins?.length ?? 0
+  const totalMembers = members?.length ?? 0
 
   useEffect(() => {
     loadMembers();
@@ -124,7 +168,7 @@ export default function CheckinPage() {
       checkin_date: getToday(),
     },
     {
-      onConflict: "checkins_member_session_unique",
+      onConflict: "member_id,session_id"
     }
   )
   .select("*, members(*), sessions(*)")
@@ -178,133 +222,251 @@ export default function CheckinPage() {
       .includes(search.toLowerCase())
   );
 
+  useEffect(() => {
+  async function loadLatestMemberTotalVisits() {
+    const memberId =
+      latestCheckin?.member_id || latestCheckin?.members?.id;
+
+    if (!memberId) {
+      setLatestMemberTotalVisits(0);
+      return;
+    }
+
+    const { count, error } = await supabase
+      .from("checkins")
+      .select("id", { count: "exact", head: true })
+      .eq("member_id", memberId);
+
+    if (error) {
+      console.error("LOAD TOTAL VISITS ERROR:", error);
+      setLatestMemberTotalVisits(0);
+      return;
+    }
+
+    setLatestMemberTotalVisits(count ?? 0);
+  }
+
+  loadLatestMemberTotalVisits();
+}, [latestCheckin]);
+
   const shouldShowMembers = search.trim() !== "";
 
+  console.log("LATEST CHECKIN DATA =", latestCheckin);
+
   return (
-  <main className="min-h-screen bg-gradient-to-br from-[#edf6e8] via-[#f7f3ea] to-[#fff2d8] p-6">
-    <div className="mx-auto max-w-5xl space-y-6">
+  <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(217,119,6,0.13),transparent_28%),radial-gradient(circle_at_top_right,rgba(22,101,52,0.10),transparent_30%),linear-gradient(180deg,#fbf7ef_0%,#f6f1e8_45%,#efe7db_100%)] text-stone-900">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
 
-      <section className="rounded-[2rem] bg-white/90 p-8 shadow-2xl ring-1 ring-black/5">
-        <a
-          href="/"
-          className="inline-block rounded-xl bg-teal-600 px-4 py-2 font-semibold text-white shadow-sm hover:bg-teal-700"
-        >
-          🏠 กลับหน้าหลัก
-        </a>
+      <section className="relative mb-8 overflow-hidden rounded-[2rem] border border-amber-100 bg-gradient-to-br from-white via-[#fffaf0] to-[#f1e7d6] shadow-[0_24px_70px_rgba(120,80,30,0.14)]">
+  <div className="relative px-6 py-8 sm:px-8">
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(180,83,9,0.24),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(22,101,52,0.16),transparent_32%)]" />
+<div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-amber-200/30 blur-3xl" />
+<div className="absolute -bottom-20 left-10 h-44 w-44 rounded-full bg-emerald-200/25 blur-3xl" />
 
-        <div className="mt-6 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-wide text-emerald-700">
-              Dunedin Meditation Hub
-            </p>
+    <div className="relative mb-6">
+      <a
+        href="/"
+        className="inline-flex items-center rounded-full border border-stone-200 bg-white/80 px-4 py-2 text-sm font-medium text-stone-700 shadow-sm transition hover:bg-white hover:text-stone-950"
+      >
+        ← กลับหน้าหลัก
+      </a>
+    </div>
 
-            <h1 className="mt-2 text-5xl font-black tracking-tight text-[#3f573f]">
-              🙏 Member Check-in
-            </h1>
+    <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <div className="mb-6 inline-flex items-center rounded-full border border-amber-300 bg-gradient-to-r from-amber-100 via-orange-50 to-emerald-50 px-6 py-3 text-xl font-extrabold tracking-wide text-amber-950 shadow-lg sm:px-10 sm:py-4 sm:text-3xl">
+  Dunedin Meditation Hub
+</div>
 
-            <p className="mt-3 text-lg text-gray-600">
-              ค้นหาสมาชิก แล้วเช็คอินก่อนเริ่มปฏิบัติธรรม
-            </p>
-          </div>
+        <h1 className="text-3xl font-semibold tracking-tight text-stone-950 sm:text-4xl">
+          Member Check-in
+        </h1>
 
-          <div className="rounded-3xl bg-[#f7f3ea] p-5 text-right shadow-inner">
-            <p className="text-sm text-gray-500">Session ปัจจุบัน</p>
-            <p className="text-2xl font-black text-[#4b5f4a]">
-              {selectedSession()?.session_name || "-"}
-            </p>
-            <p className="text-sm text-gray-500">
-              {selectedSession()?.session_number || ""} •{" "}
-              {selectedSession()?.event_date || ""}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-[2rem] bg-white/90 p-6 shadow-xl ring-1 ring-black/5">
-        <label className="font-bold text-[#4b5f4a]">
-          เลือก Session / Select Session
-        </label>
-
-        <select
-          value={selectedSessionId}
-          onChange={(e) => setSelectedSessionId(e.target.value)}
-          className="mt-3 w-full rounded-2xl border-2 border-[#dfe6da] bg-white p-4 text-lg font-semibold focus:border-emerald-500 focus:outline-none"
-        >
-          {sessions.map((session) => (
-            <option key={session.id} value={session.id}>
-              {session.session_name}{" "}
-              {session.session_number ? `(${session.session_number})` : ""} -{" "}
-              {session.event_date || ""}
-            </option>
-          ))}
-        </select>
-
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link
-            href="/sessions"
-            className="rounded-xl bg-green-700 px-5 py-3 font-semibold text-white hover:bg-green-800"
-          >
-            + สร้างรุ่นใหม่
-          </Link>
-
-          <Link
-            href="/checkin/manual"
-            className="rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800"
-          >
-            + เช็คอินย้อนหลัง
-          </Link>
-
-          <button
-            onClick={loadSessions}
-            className="rounded-xl border px-5 py-3 font-semibold text-[#4b5f4a] hover:bg-[#f7f3ea]"
-          >
-            Refresh
-          </button>
-        </div>
-      </section>
-
-      <section className="rounded-[2rem] bg-white/90 p-6 shadow-xl ring-1 ring-black/5">
-        <p className="text-2xl font-black text-[#4b5f4a]">
-          🔍 ค้นหาสมาชิกเพื่อเช็คอิน
+        <p className="mt-3 max-w-2xl text-base leading-7 text-stone-600">
+          ค้นหาสมาชิก เช็คชื่อ และต้อนรับผู้เข้าร่วมปฏิบัติธรรมอย่างเรียบง่ายและสงบ
         </p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-stone-200 bg-white/80 px-5 py-4 text-right shadow-sm backdrop-blur">
+          <p className="text-sm font-medium text-stone-500">Session ปัจจุบัน</p>
+          <p className="mt-1 max-w-[220px] truncate text-xl font-semibold text-stone-950">
+            {selectedSession()?.session_name || "—"}
+          </p>
+          <p className="mt-1 text-sm text-stone-500">
+            {selectedSession()?.session_number || "—"} · {selectedSession()?.event_date || ""}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-stone-200 bg-white/80 px-5 py-4 text-right shadow-sm backdrop-blur">
+          <p className="text-sm font-medium text-stone-500">Checked in today</p>
+          <p className="mt-1 text-3xl font-semibold text-stone-950">
+            {checkedInCount}
+          </p>
+          <p className="mt-1 text-sm text-stone-500">
+            from {totalMembers} members
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+      <section className="relative mb-8 overflow-hidden rounded-[2rem] border border-amber-100 bg-white p-6 shadow-[0_18px_50px_rgba(120,80,30,0.10)] sm:p-8">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 via-orange-300 to-emerald-400" />
+  <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p className="text-sm font-medium uppercase tracking-[0.2em] text-amber-700">
+        Session
+      </p>
+
+      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-stone-950">
+        เลือกรอบปฏิบัติธรรม
+      </h2>
+
+      <p className="mt-2 text-sm leading-6 text-stone-500">
+        เลือก session ที่ต้องการเช็คชื่อผู้เข้าร่วมในวันนี้
+      </p>
+    </div>
+
+    <div className="flex flex-wrap items-center gap-2">
+  <div className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
+    พร้อมใช้งาน
+  </div>
+
+  <a
+    href="/sessions"
+    className="inline-flex items-center rounded-full bg-stone-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-stone-800"
+  >
+    + สร้างรุ่น
+  </a>
+</div>
+  </div>
+
+  <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+    <div>
+      <label className="mb-2 block text-sm font-medium text-stone-700">
+        Select Session
+      </label>
+
+      <div className="relative">
+  <button
+    type="button"
+    onClick={() => setSessionDropdownOpen((open) => !open)}
+    className="flex h-14 w-full items-center justify-between rounded-2xl border border-stone-200 bg-stone-50 px-4 text-left text-base font-medium text-stone-900 outline-none transition hover:bg-white focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-100"
+  >
+    <span className="truncate">
+      {selectedSession()
+        ? `${selectedSession()?.session_name} — ${selectedSession()?.session_number} — ${selectedSession()?.event_date}`
+        : "เลือก Session"}
+    </span>
+
+    <span className="ml-3 text-stone-400">
+      {sessionDropdownOpen ? "⌃" : "⌄"}
+    </span>
+  </button>
+
+  {sessionDropdownOpen && (
+    <div className="absolute left-0 top-full z-50 mt-2 max-h-80 w-full overflow-y-auto rounded-2xl border border-stone-200 bg-white p-2 shadow-xl">
+      {sessions.map((session) => (
+        <button
+          key={session.id}
+          type="button"
+          onClick={() => {
+            setSelectedSessionId(session.id);
+            setSessionDropdownOpen(false);
+          }}
+          className={`w-full rounded-xl px-4 py-3 text-left text-sm font-medium transition hover:bg-amber-50 ${
+            selectedSessionId === session.id
+              ? "bg-amber-50 text-amber-800"
+              : "text-stone-700"
+          }`}
+        >
+          <div className="font-semibold text-stone-950">
+            {session.session_name}
+          </div>
+
+          <div className="mt-1 text-xs text-stone-500">
+            {session.session_number} — {session.event_date}
+          </div>
+        </button>
+      ))}
+    </div>
+  )}
+</div>
+    </div>
+
+    <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
+      <p className="text-sm font-medium text-stone-500">Current selection</p>
+
+      <p className="mt-2 truncate text-lg font-semibold text-stone-950">
+        {selectedSession()?.session_name || "—"}
+      </p>
+
+      <p className="mt-1 text-sm text-stone-500">
+        {selectedSession()?.session_number || "—"}
+      </p>
+
+      <p className="mt-1 text-sm text-stone-500">
+        {selectedSession()?.event_date || "—"}
+      </p>
+    </div>
+  </div>
+</section>
+
+      <section className="mb-8 rounded-[2rem] border border-stone-200 bg-white p-7 shadow-sm sm:p-8">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-amber-300 to-orange-300" />
+        <div className="mb-5">
+  <p className="text-sm font-medium uppercase tracking-[0.2em] text-amber-700">
+    Member Check-in
+  </p>
+
+  <h2 className="mt-2 text-3xl font-semibold tracking-tight text-stone-950">
+    🔍 ค้นหาสมาชิกเพื่อเช็คอิน
+  </h2>
+
+  <p className="mt-2 text-base leading-7 text-stone-500">
+    พิมพ์ชื่อ ชื่อเล่น หรือเบอร์โทร แล้วกด Check-in ได้ทันที
+  </p>
+</div>
 
         <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="พิมพ์ชื่อ ชื่อเล่น เบอร์โทร หรืออีเมล"
-          className="mt-4 w-full rounded-3xl border-2 border-[#dfe6da] bg-white p-5 text-2xl font-semibold shadow-sm focus:border-emerald-500 focus:outline-none"
-        />
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  placeholder="พิมพ์ชื่อ ชื่อเล่น หรือเบอร์โทร..."
+  className="h-16 w-full rounded-3xl border border-amber-100 bg-white/90 px-5 text-lg font-medium text-stone-900 shadow-inner outline-none transition placeholder:text-stone-400 focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-100"
+/>
 
         {search.trim() !== "" && (
-          <div className="mt-4 max-h-96 overflow-y-auto rounded-3xl border bg-white shadow-lg">
+          <div className="mt-6 max-h-[520px] space-y-4 overflow-y-auto rounded-3xl border border-stone-200 bg-stone-50 p-4">
             {filteredMembers.slice(0, 10).map((member) => {
               const checked = alreadyCheckedIn(member.id);
 
               return (
                 <div
-                  key={member.id}
-                  className="flex items-center justify-between border-b p-4 hover:bg-emerald-50"
-                >
+  key={member.id}
+ className="flex flex-col gap-5 rounded-3xl border border-stone-200 bg-white p-5 shadow-sm transition hover:border-amber-200 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+>
                   <div className="flex items-center gap-4">
                     {member.profile_photo_url ? (
                       <img
                         src={member.profile_photo_url}
                         alt=""
-                        className="h-14 w-14 rounded-full object-cover"
+                        className="h-14 w-14 rounded-full object-cover ring-2 ring-white"
                       />
                     ) : (
-                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-200 text-2xl">
-                        🙏
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-stone-950 text-base font-semibold text-white">
+                        {getInitials(member.full_name)}
                       </div>
                     )}
 
                     <div>
-                      <p className="text-lg font-bold text-slate-900">
-                        {member.full_name}
-                      </p>
-                      <p className="text-gray-500">
-                        {member.nickname || member.phone || "-"}
-                      </p>
+                      <p className="truncate text-lg font-semibold text-stone-950">
+  {member.full_name}
+</p>
+<p className="truncate text-sm text-stone-500">
+  {member.nickname || member.phone || "Member profile"}
+</p>
                     </div>
                   </div>
 
@@ -312,12 +474,13 @@ export default function CheckinPage() {
                     onClick={() => handleCheckin(member)}
                     disabled={checked || !selectedSessionId}
                     className={
-                      checked || !selectedSessionId
-                        ? "rounded-xl bg-gray-300 px-5 py-3 font-semibold text-gray-600"
-                        : "rounded-xl bg-green-700 px-5 py-3 font-semibold text-white shadow hover:bg-green-800"
-                    }
+  checked || !selectedSessionId
+  ? "min-h-[52px] min-w-[132px] rounded-2xl bg-stone-200 px-7 py-3 text-base font-semibold text-stone-500"
+  : "min-h-[52px] min-w-[132px] rounded-2xl bg-stone-950 px-7 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-stone-800"
+    
+}
                   >
-                    {checked ? "เช็คอินแล้ว" : "Check-in"}
+                    {checked ? "Checked in" : "Check-in"}
                   </button>
                 </div>
               );
@@ -362,7 +525,7 @@ export default function CheckinPage() {
             </p>
 
             <p className="mt-5 text-3xl font-black text-green-700">
-              เช็คอินสำเร็จ ✅
+             Check-in complete ✅
             </p>
 
             <p className="mt-3 text-gray-600">
@@ -371,9 +534,16 @@ export default function CheckinPage() {
                 : ""}
             </p>
 
-            <p className="mt-4 rounded-2xl bg-white px-5 py-3 text-lg font-bold text-green-700">
-              มาทั้งหมด {latestCheckin.totalVisits || 0} ครั้ง
-            </p>
+            <div className="mt-6 inline-flex min-w-[190px] flex-col items-center rounded-[2rem] border border-emerald-200 bg-gradient-to-br from-white via-emerald-50 to-white px-10 py-6 shadow-[0_18px_40px_rgba(22,101,52,0.16)]">
+  <span className="text-6xl font-black leading-none tracking-tight text-emerald-700">
+    {latestMemberTotalVisits}
+  </span>
+
+  <span className="mt-3 text-sm font-extrabold uppercase tracking-[0.22em] text-emerald-800">
+    visits total
+  </span>
+</div>
+
           </div>
         ) : (
           <div className="mt-5 rounded-[2rem] border bg-white p-8 text-center shadow-sm">
@@ -388,98 +558,91 @@ export default function CheckinPage() {
         )}
       </section>
 
-      <section className="rounded-[2rem] bg-white/90 p-6 shadow-xl ring-1 ring-black/5">
-        <h2 className="text-2xl font-black text-[#4b5f4a]">
-          เช็คอินล่าสุด 5 คน
-        </h2>
+      <section className="rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+  <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p className="text-sm font-medium uppercase tracking-[0.2em] text-amber-700">
+        Attendance
+      </p>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {latestFiveCheckins.length > 0 ? (
-            latestFiveCheckins.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-3 rounded-2xl bg-[#fffdf8] p-4 shadow-sm"
-              >
-                {item.members?.profile_photo_url ? (
-                  <img
-                    src={item.members.profile_photo_url}
-                    alt=""
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200">
-                    🙏
-                  </div>
-                )}
+      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-stone-950">
+        เช็คอินล่าสุด 5 คน
+      </h2>
 
-                <div>
-                  <p className="font-bold">{item.members?.full_name || "-"}</p>
-                  <p className="text-sm text-gray-500">
-                    {item.members?.nickname || "-"}
-                  </p>
+      <p className="mt-2 text-sm leading-6 text-stone-500">
+        รายชื่อผู้เข้าร่วมที่เช็คอินล่าสุดใน Session นี้
+      </p>
+    </div>
+
+    <div className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
+      {checkedInCount} checked in
+    </div>
+  </div>
+
+  {latestFiveCheckins.length > 0 ? (
+    <div className="space-y-3">
+      {latestFiveCheckins.map((item) => {
+        const memberName = item.members?.full_name || "Member"
+        const memberDetail = item.members?.nickname || "Checked in"
+
+        return (
+          <div
+            key={item.id}
+            className="flex flex-col gap-4 rounded-2xl border border-stone-200 bg-stone-50 p-4 transition hover:border-amber-200 hover:bg-white sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              {item.members?.profile_photo_url ? (
+                <img
+                  src={item.members.profile_photo_url}
+                  alt={memberName}
+                  className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-white"
+                />
+              ) : (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-stone-950 text-sm font-semibold text-white">
+                  {getInitials(memberName)}
                 </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500">ยังไม่มีเช็คอินใน Session นี้</p>
-          )}
-        </div>
-      </section>
-
-      <section className="rounded-[2rem] bg-white/90 p-6 shadow-xl ring-1 ring-black/5">
-        <h2 className="text-2xl font-black text-[#4b5f4a]">
-          รายการเช็คอินวันนี้ / Today&apos;s Check-ins
-        </h2>
-
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="p-3 text-left">สมาชิก</th>
-                <th className="p-3 text-left">เวลา</th>
-                <th className="p-3 text-left">Session</th>
-                <th className="p-3 text-center">จัดการ</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {todayCheckins.map((checkin) => (
-                <tr key={checkin.id} className="border-b">
-                  <td className="p-3">
-                    {checkin.members?.full_name || "-"}
-                  </td>
-                  <td className="p-3">
-                    {checkin.checkin_time
-                      ? new Date(checkin.checkin_time).toLocaleTimeString()
-                      : "-"}
-                  </td>
-                  <td className="p-3">
-                    {checkin.sessions?.session_name ||
-                      checkin.session_name ||
-                      "-"}
-                  </td>
-                  <td className="p-3 text-center">
-                    <button
-                      onClick={() => handleDeleteCheckin(checkin.id)}
-                      className="rounded-lg bg-red-600 px-3 py-2 text-white hover:bg-red-700"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-
-              {todayCheckins.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="p-6 text-center text-gray-500">
-                    ยังไม่มี Check-in วันนี้ / No check-ins today
-                  </td>
-                </tr>
               )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-stone-950">
+                  {memberName}
+                </p>
+
+                <p className="truncate text-sm text-stone-500">
+                  {memberDetail}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 sm:justify-end">
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                Present
+              </span>
+
+              <p className="text-sm text-stone-500">
+                {formatCheckinTime(item.created_at)}
+              </p>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  ) : (
+    <div className="rounded-3xl border border-dashed border-stone-300 bg-stone-50 p-8 text-center">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-xl shadow-sm">
+        🙏
+      </div>
+
+      <p className="mt-4 font-semibold text-stone-900">
+        ยังไม่มีผู้ Check-in
+      </p>
+
+      <p className="mt-2 text-sm leading-6 text-stone-500">
+        เมื่อสมาชิกเช็คอินแล้ว รายชื่อจะแสดงที่นี่ทันที
+      </p>
+    </div>
+  )}
+</section>
     </div>
   </main>
 );

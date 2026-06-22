@@ -122,23 +122,28 @@ setSession({
   }
 
   async function deleteCheckin(id: string) {
-  if (!confirm("ต้องการลบรายการนี้ใช่ไหม?")) return;
+  const ok = confirm("ต้องการลบรายการเช็คอินนี้ใช่ไหม?");
+  if (!ok) return;
 
-  console.log("DELETE ID =", id);
+  console.log("DELETE CHECKIN ID =", id);
 
-  const result = await supabase
+  const { data, error } = await supabase
     .from("checkins")
     .delete()
-    .eq("id", id);
+    .eq("id", id)
+    .select();
 
-  console.log(result);
+  console.log("DELETE RESULT =", { data, error });
 
-  if (result.error) {
-    alert(result.error.message);
+  if (error) {
+    alert(error.message);
     return;
   }
 
-  alert("ลบสำเร็จ");
+  if (!data || data.length === 0) {
+    alert("ลบไม่สำเร็จ: ไม่พบรายการนี้ หรือไม่มีสิทธิ์ลบใน Supabase RLS");
+    return;
+  }
 
   await loadData();
 }
