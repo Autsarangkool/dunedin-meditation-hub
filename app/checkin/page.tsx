@@ -319,29 +319,29 @@ export default function CheckinPage() {
   const shouldShowMembers = search.trim() !== "";
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#f8f5ec] px-4 py-6 text-[#14382d] sm:px-6">
+    <main className="relative min-h-screen overflow-hidden bg-[#fffef8] px-4 py-6 text-[#14382d] sm:px-6">
       <CheckinBackground />
 
       <div className="relative z-10 mx-auto max-w-[1500px]">
-        <header className="mb-6 overflow-hidden rounded-[2rem] border border-white/80 bg-white/75 px-5 py-4 shadow-[0_24px_70px_rgba(15,23,42,0.10)] backdrop-blur-2xl sm:px-7">
+        <header className="mb-6 overflow-hidden rounded-[2rem] border border-emerald-100/80 bg-white/90 px-5 py-4 shadow-[0_22px_70px_rgba(16,185,129,0.12)] backdrop-blur-2xl sm:px-7">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-100 to-teal-100 text-4xl shadow-inner">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-lime-100 via-emerald-100 to-cyan-100 text-4xl shadow-inner">
                 🪷
               </div>
 
               <div>
-                <h1 className="text-2xl font-black tracking-tight text-emerald-950 sm:text-3xl">
+                <h1 className="text-2xl font-black tracking-tight text-[#124a35] sm:text-3xl">
                   Dunedin Meditation Hub
                 </h1>
-                <p className="mt-1 text-sm font-medium text-emerald-700">
+                <p className="mt-1 text-sm font-medium text-[#24945f]">
                   A calm mind, a kind heart, a better world.
                 </p>
               </div>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="rounded-2xl border border-emerald-100 bg-white/85 px-5 py-3 text-sm font-bold text-emerald-800 shadow-sm">
+              <div className="rounded-2xl border border-emerald-200 bg-white/95 px-5 py-3 text-sm font-bold text-emerald-800 shadow-sm">
                 📅 {formatSessionDate(currentSession?.event_date)}
               </div>
 
@@ -352,7 +352,7 @@ export default function CheckinPage() {
 
               <Link
                 href="/"
-                className="inline-flex items-center justify-center rounded-2xl bg-emerald-900 px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-100 transition hover:-translate-y-0.5 hover:bg-emerald-800"
+                className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-100 transition hover:-translate-y-0.5 hover:from-emerald-500 hover:to-teal-400"
               >
                 🏠 Home
               </Link>
@@ -361,9 +361,9 @@ export default function CheckinPage() {
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_430px]">
-          <section className="relative overflow-hidden rounded-[2.5rem] border border-white/80 bg-white/78 p-5 shadow-[0_30px_100px_rgba(15,23,42,0.10)] backdrop-blur-2xl sm:p-8 lg:p-10">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,243,208,0.62),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(254,240,138,0.26),transparent_34%)]" />
-            <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-emerald-200/45 blur-3xl" />
+          <section className="relative overflow-hidden rounded-[2.5rem] border border-emerald-100/90 bg-white/95 p-5 shadow-[0_30px_100px_rgba(16,185,129,0.14)] backdrop-blur-2xl sm:p-8 lg:p-10">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(134,239,172,0.58),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(253,224,71,0.34),transparent_34%),radial-gradient(circle_at_center_left,rgba(125,211,252,0.22),transparent_30%)]" />
+            <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-lime-200/55 blur-3xl" />
             <div className="pointer-events-none absolute right-10 top-20 hidden h-36 w-36 items-center justify-center rounded-full border border-emerald-100 bg-white/50 text-6xl shadow-inner lg:flex">
               👤
             </div>
@@ -373,27 +373,27 @@ export default function CheckinPage() {
 
             <div className="relative">
               <div className="mb-8 max-w-3xl">
-                <p className="mb-3 text-sm font-black uppercase tracking-[0.28em] text-emerald-700">
+                <p className="mb-3 text-sm font-black uppercase tracking-[0.28em] text-[#24945f]">
                   🌿 Member Check-In
                 </p>
 
-                <h2 className="text-5xl font-black leading-[0.95] tracking-tight text-emerald-950 sm:text-6xl lg:text-7xl">
+                <h2 className="text-5xl font-black leading-[0.95] tracking-tight text-[#0f5132] sm:text-6xl lg:text-7xl">
                   Member Check-In
                 </h2>
 
-                <p className="mt-5 text-xl font-bold text-slate-600">
+                <p className="mt-5 text-xl font-bold text-[#37785b]">
                   ค้นหาสมาชิกเพื่อเช็คอิน
                 </p>
 
-                <p className="mt-2 text-sm font-medium leading-6 text-slate-500 sm:text-base">
+                <p className="mt-2 text-sm font-medium leading-6 text-[#688779] sm:text-base">
                   ค้นหาชื่อ, ชื่อเล่น, เบอร์โทร หรืออีเมล แล้วกด Check-In ได้ทันที
                 </p>
               </div>
 
-              <div className="mb-7 rounded-[2rem] border border-emerald-100 bg-white/70 p-4 shadow-sm backdrop-blur">
+              <div className="mb-7 rounded-[2rem] border border-emerald-200 bg-gradient-to-r from-white via-emerald-50/70 to-cyan-50/60 p-4 shadow-[0_14px_35px_rgba(16,185,129,0.10)] backdrop-blur">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-end">
                   <div className="min-w-0 flex-1">
-                    <label className="mb-2 block text-sm font-black text-slate-600">
+                    <label className="mb-2 block text-sm font-black text-[#37785b]">
                       Select Session
                     </label>
 
@@ -401,7 +401,7 @@ export default function CheckinPage() {
                       <button
                         type="button"
                         onClick={() => setSessionDropdownOpen((open) => !open)}
-                        className="flex h-14 w-full items-center justify-between rounded-2xl border border-emerald-100 bg-white/90 px-4 text-left text-base font-bold text-slate-800 outline-none shadow-sm backdrop-blur transition hover:bg-white focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100"
+                        className="flex h-14 w-full items-center justify-between rounded-2xl border border-emerald-200 bg-white px-4 text-left text-base font-bold text-slate-800 outline-none shadow-sm backdrop-blur transition hover:bg-white focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100/80"
                       >
                         <span className="truncate">
                           {loadingSessions
@@ -457,30 +457,56 @@ export default function CheckinPage() {
 
                   <Link
                     href="/sessions"
-                    className="inline-flex h-14 items-center justify-center rounded-2xl bg-emerald-900 px-5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-800"
+                    className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 text-sm font-black text-white shadow-sm transition hover:from-emerald-500 hover:to-teal-400"
                   >
                     Manage Sessions
                   </Link>
                 </div>
               </div>
 
-              <div className="relative mb-7">
-                <div className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-2xl">
-                  🔎
+              <div className="relative mb-8 overflow-hidden rounded-[2rem] border border-emerald-200 bg-gradient-to-r from-white via-emerald-50/70 to-sky-50/70 p-3 shadow-[0_18px_55px_rgba(34,197,94,0.18)] transition focus-within:-translate-y-0.5 focus-within:border-emerald-400 focus-within:shadow-[0_24px_70px_rgba(34,197,94,0.24)]">
+                <div className="pointer-events-none absolute -left-10 -top-12 h-32 w-32 rounded-full bg-lime-200/55 blur-2xl" />
+                <div className="pointer-events-none absolute -bottom-12 right-8 h-32 w-32 rounded-full bg-sky-200/55 blur-2xl" />
+
+                <div className="relative flex items-center gap-3">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-lime-200 via-emerald-100 to-cyan-100 text-2xl shadow-sm">
+                    🔎
+                  </div>
+
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by name, nickname, phone or email..."
+                    className="h-16 min-w-0 flex-1 bg-transparent px-2 text-lg font-bold text-[#173f31] outline-none placeholder:font-medium placeholder:text-[#7d9b8e]"
+                  />
+
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch("")}
+                      className="mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-sm font-black text-[#4f7d68] shadow-sm transition hover:scale-105 hover:bg-emerald-50"
+                      aria-label="Clear search"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
 
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name, nickname, phone or email..."
-                  className="h-16 w-full rounded-3xl border border-emerald-100 bg-white/90 pl-14 pr-5 text-base font-semibold text-slate-800 shadow-[0_12px_35px_rgba(15,23,42,0.08)] outline-none backdrop-blur placeholder:text-slate-400 focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100"
-                />
+                <div className="relative mt-2 flex flex-wrap items-center justify-between gap-2 px-2 pb-1">
+                  <p className="text-xs font-semibold text-[#719183]">
+                    Type a name, nickname, phone number or email
+                  </p>
+
+                  <span className="rounded-full bg-gradient-to-r from-lime-200 to-emerald-100 px-3 py-1 text-xs font-black text-[#17633f] shadow-sm">
+                    {filteredMembers.length} results
+                  </span>
+                </div>
               </div>
 
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-xl font-black text-emerald-950">Members</h3>
 
-                <span className="text-sm font-bold text-emerald-700">
+                <span className="text-sm font-bold text-[#24945f]">
                   Select a member to check in
                 </span>
               </div>
@@ -548,7 +574,7 @@ export default function CheckinPage() {
               </div>
 
               <div className="relative">
-                <p className="mb-3 text-sm font-black uppercase tracking-[0.28em] text-emerald-700">
+                <p className="mb-3 text-sm font-black uppercase tracking-[0.28em] text-[#24945f]">
                   🕘 Latest Check-In
                 </p>
 
@@ -578,7 +604,7 @@ export default function CheckinPage() {
                       </p>
                     )}
 
-                    <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-5 py-2 text-2xl font-black text-emerald-700">
+                    <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-5 py-2 text-2xl font-black text-[#24945f]">
                       <span>✅</span>
                       Checked In
                     </p>
@@ -596,7 +622,7 @@ export default function CheckinPage() {
                     </div>
 
                     <div className="inline-flex min-w-[210px] flex-col items-center rounded-[2rem] border border-emerald-200 bg-gradient-to-br from-white via-emerald-50 to-white px-10 py-6 shadow-[0_18px_40px_rgba(22,101,52,0.16)]">
-                      <span className="text-6xl font-black leading-none tracking-tight text-emerald-700">
+                      <span className="text-6xl font-black leading-none tracking-tight text-[#24945f]">
                         {latestMemberTotalVisits}
                       </span>
 
@@ -621,7 +647,7 @@ export default function CheckinPage() {
               <div className="relative">
                 <div className="mb-5 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-700">
+                    <p className="text-xs font-black uppercase tracking-[0.22em] text-[#24945f]">
                       Attendance
                     </p>
 
@@ -630,7 +656,7 @@ export default function CheckinPage() {
                     </h3>
                   </div>
 
-                  <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
+                  <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-black text-[#24945f]">
                     {checkedInCount} checked in
                   </span>
                 </div>
@@ -672,12 +698,12 @@ function CheckinBackground() {
     <>
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.16),transparent_34%),radial-gradient(circle_at_18%_18%,rgba(56,189,248,0.12),transparent_28%),linear-gradient(135deg,#f8fbf6_0%,#fff8ec_48%,#eef9f4_100%)]"
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(74,222,128,0.24),transparent_34%),radial-gradient(circle_at_18%_18%,rgba(56,189,248,0.19),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(250,204,21,0.20),transparent_30%),linear-gradient(135deg,#fbfff8_0%,#fff9df_48%,#effcff_100%)]"
       >
-        <div className="absolute -right-32 -top-32 h-[620px] w-[620px] rounded-full bg-emerald-300/25 blur-3xl" />
-        <div className="absolute left-[18%] top-[-120px] h-[460px] w-[560px] rounded-full bg-sky-200/28 blur-3xl" />
-        <div className="absolute -left-28 bottom-10 h-[520px] w-[520px] rounded-full bg-amber-200/28 blur-3xl" />
-        <div className="absolute bottom-[-160px] right-[22%] h-[520px] w-[520px] rounded-full bg-lime-200/25 blur-3xl" />
+        <div className="absolute -right-32 -top-32 h-[620px] w-[620px] rounded-full bg-emerald-300/35 blur-3xl" />
+        <div className="absolute left-[18%] top-[-120px] h-[460px] w-[560px] rounded-full bg-sky-200/38 blur-3xl" />
+        <div className="absolute -left-28 bottom-10 h-[520px] w-[520px] rounded-full bg-yellow-200/38 blur-3xl" />
+        <div className="absolute bottom-[-160px] right-[22%] h-[520px] w-[520px] rounded-full bg-lime-200/38 blur-3xl" />
 
         <div className="absolute right-12 top-28 text-6xl opacity-25">🕊️</div>
         <div className="absolute left-[12%] bottom-28 text-6xl opacity-20">
@@ -710,7 +736,7 @@ function MiniStat({ label, value }: { label: string; value: number }) {
       <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-black text-emerald-700">
+      <p className="mt-1 text-2xl font-black text-[#24945f]">
         {value.toLocaleString()}
       </p>
     </div>
@@ -744,7 +770,7 @@ function MemberResultCard({
                 {member.full_name || "-"}
               </p>
 
-              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-black text-emerald-700">
+              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-black text-[#24945f]">
                 Member
               </span>
             </div>
