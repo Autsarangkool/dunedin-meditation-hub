@@ -146,27 +146,30 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#edf3ee] px-3 py-5 text-[#34483b] sm:px-6 sm:py-10">
-      <div className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-[#cdd8cf] bg-[#fffefb] shadow-[0_24px_70px_rgba(44,68,52,.14)]">
-        <header className="border-b border-[#425a49] px-5 py-6 sm:px-10">
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-100 via-white to-emerald-50 px-3 py-5 text-slate-700 sm:px-6 sm:py-10">
+      <div aria-hidden="true" className="pointer-events-none fixed -left-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-blue-200/40 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none fixed -bottom-40 -right-32 h-[36rem] w-[36rem] rounded-full bg-emerald-200/40 blur-3xl" />
+      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/70 shadow-[0_28px_90px_rgba(56,120,170,.18)] backdrop-blur-xl">
+        <header className="relative overflow-hidden border-b border-sky-100 bg-[radial-gradient(circle_at_top_right,rgba(186,230,253,.85),transparent_38%),radial-gradient(circle_at_bottom_left,rgba(167,243,208,.42),transparent_35%),linear-gradient(145deg,rgba(255,255,255,.98),rgba(240,249,255,.9))] px-5 py-7 sm:px-10 sm:py-10">
+          <div aria-hidden="true" className="absolute right-8 top-8 text-5xl opacity-20">❄️</div>
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
             <div className="flex items-center gap-4">
-              <div className="grid h-16 w-16 place-items-center rounded-full border border-[#b8a36a] bg-[#f8f2df] text-3xl">◉</div>
+              <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-blue-500 to-emerald-400 text-3xl shadow-lg shadow-sky-200">🪷</div>
               <div>
-                <p className="text-2xl font-bold tracking-[.14em] text-[#987b2c]">DIRI</p>
-                <p className="text-xs text-[#796a43]">Dhammachai International Research Institute</p>
+                <p className="text-2xl font-black tracking-[.14em] text-blue-600">DIRI</p>
+                <p className="text-xs font-semibold text-slate-500">Dhammachai International Research Institute</p>
               </div>
             </div>
             <div className="sm:text-right">
-              <h1 className="font-serif text-2xl font-bold uppercase tracking-wide sm:text-3xl">Dunedin Meditation Hub</h1>
-              <p className="font-serif text-lg uppercase">Meditation Program Registration</p>
-              <p className="text-sm text-[#69736c]">DIRI · Dhammachai International Research Institute</p>
-              <p className="mt-1 font-serif italic">Take an hour to unwind, refocus and reset.</p>
+              <p className="text-xs font-black uppercase tracking-[.22em] text-blue-500">Mindfulness · Community · Wellbeing</p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Dunedin Meditation Hub</h1>
+              <p className="mt-1 text-lg font-bold text-slate-700">Meditation Program Registration</p>
+              <p className="mt-2 text-sm font-medium text-slate-500">Take an hour to unwind, refocus and reset.</p>
             </div>
           </div>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-            <Link href="/" className="rounded-md border border-[#b8c6ba] px-4 py-2 text-sm font-semibold hover:bg-[#edf3ee]">← Back to home</Link>
-            <p className="text-xs text-[#69736c]">Fields marked Optional do not need to be completed.</p>
+            <Link href="/" className="rounded-xl border border-sky-100 bg-white/90 px-4 py-2.5 text-sm font-bold text-blue-600 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">← Back to home</Link>
+            <p className="rounded-full bg-white/75 px-4 py-2 text-xs font-semibold text-slate-500">Fields marked Optional do not need to be completed.</p>
           </div>
           {notice && (
             <div role="status" className={`mt-5 rounded-lg border px-4 py-3 text-sm font-semibold ${notice.type === "success" ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-red-300 bg-red-50 text-red-800"}`}>
@@ -175,7 +178,7 @@ export default function RegisterPage() {
           )}
         </header>
 
-        <form onSubmit={handleSubmit} className="px-5 py-6 sm:px-10 sm:py-8">
+        <form onSubmit={handleSubmit} className="space-y-6 px-5 py-6 sm:px-10 sm:py-9">
           <Section number="1" title="Participant Details">
             <div className="grid gap-x-7 gap-y-5 md:grid-cols-2">
               <Field name="full_name" label="Full name" required />
@@ -242,7 +245,7 @@ export default function RegisterPage() {
           </div>
           <p className="mt-3 text-xs italic text-[#69736c]">I confirm that the information provided above is accurate and reflects my choices.</p>
 
-          <button type="submit" disabled={saving} className="mt-7 w-full rounded-lg bg-[#405949] px-6 py-4 text-base font-bold uppercase tracking-wider text-white shadow-lg transition hover:bg-[#304438] disabled:cursor-not-allowed disabled:opacity-60">
+          <button type="submit" disabled={saving} className="mt-7 w-full rounded-2xl bg-gradient-to-r from-blue-500 via-sky-500 to-emerald-400 px-6 py-4 text-base font-black uppercase tracking-wider text-white shadow-lg shadow-sky-200 transition hover:-translate-y-0.5 hover:brightness-105 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60">
             {saving ? "Saving registration…" : "Submit Registration"}
           </button>
         </form>
@@ -253,10 +256,10 @@ export default function RegisterPage() {
 
 function Section({ number, title, children }: { number: string; title: string; children: ReactNode }) {
   return (
-    <section className="mb-8">
-      <div className="mb-5 flex items-stretch border-b border-[#87978b]">
-        <span className="grid min-w-28 place-items-center bg-[#405949] px-5 py-1 text-sm font-bold text-white sm:min-w-48">{number}</span>
-        <h2 className="px-3 py-1 font-serif text-sm font-bold uppercase sm:text-base">{title}</h2>
+    <section className="rounded-[1.75rem] border border-sky-100/90 bg-white/88 p-5 shadow-[0_18px_50px_rgba(56,140,190,.09)] sm:p-7">
+      <div className="mb-6 flex items-center gap-3 border-b border-sky-100 pb-4">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-emerald-400 text-sm font-black text-white shadow-md shadow-sky-100">{number}</span>
+        <h2 className="text-base font-black uppercase tracking-wide text-slate-900 sm:text-lg">{title}</h2>
       </div>
       {children}
     </section>
@@ -264,14 +267,14 @@ function Section({ number, title, children }: { number: string; title: string; c
 }
 
 function Group({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
-  return <div><h3 className="font-serif text-sm font-bold uppercase">{title}</h3>{subtitle && <p className="mb-2 text-xs italic text-[#69736c]">{subtitle}</p>}<div className="mt-2 space-y-3">{children}</div></div>;
+  return <div className="rounded-2xl bg-gradient-to-br from-sky-50/70 to-emerald-50/60 p-4"><h3 className="text-sm font-black uppercase tracking-wide text-slate-800">{title}</h3>{subtitle && <p className="mb-2 text-xs italic text-slate-500">{subtitle}</p>}<div className="mt-3 space-y-3">{children}</div></div>;
 }
 
 function Field({ name, label, type = "text", required, optional, hint }: { name: string; label: string; type?: string; required?: boolean; optional?: boolean; hint?: string }) {
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-bold">{label} {optional && <small className="font-normal text-[#69736c]">(Optional)</small>} {hint && <small className="font-serif font-normal italic text-[#69736c]">— {hint}</small>}</span>
-      <input name={name} type={type} required={required} className="h-11 w-full border-0 border-b border-[#aebbb0] bg-transparent px-1 text-[#27352c] outline-none transition focus:border-[#405949] focus:ring-0" />
+      <input name={name} type={type} required={required} className="h-12 w-full rounded-xl border border-sky-100 bg-white/90 px-4 text-slate-800 outline-none shadow-sm transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100" />
     </label>
   );
 }
@@ -289,11 +292,11 @@ function Check({ name, value, required, children }: { name: string; value?: stri
 }
 
 function LineInput({ name, label }: { name: string; label: string }) {
-  return <label className="flex items-end gap-2 text-sm"><span>{label}:</span><input name={name} className="min-w-0 flex-1 border-0 border-b border-[#87978b] bg-transparent px-1 outline-none focus:border-[#405949] focus:ring-0" /></label>;
+  return <label className="flex items-center gap-2 text-sm"><span>{label}:</span><input name={name} className="h-10 min-w-0 flex-1 rounded-xl border border-sky-100 bg-white px-3 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100" /></label>;
 }
 
 function RadioCards({ name, options, required }: { name: string; options: readonly (readonly [string,string,string])[]; required?: boolean }) {
-  return <fieldset className="grid gap-3 md:grid-cols-3">{options.map(([value,title,description]) => <label key={value} className="cursor-pointer rounded-lg border border-[#cdd8cf] p-4 transition hover:bg-[#f3f5f1]"><span className="flex items-center gap-2 font-bold"><input type="radio" name={name} value={value} required={required} className="h-4 w-4 accent-[#405949]" />{title}</span><span className="mt-2 block text-xs leading-5">{description}</span></label>)}</fieldset>;
+  return <fieldset className="grid gap-3 md:grid-cols-3">{options.map(([value,title,description]) => <label key={value} className="cursor-pointer rounded-2xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/70 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md"><span className="flex items-center gap-2 font-bold text-slate-800"><input type="radio" name={name} value={value} required={required} className="h-4 w-4 accent-blue-500" />{title}</span><span className="mt-2 block text-xs leading-5 text-slate-500">{description}</span></label>)}</fieldset>;
 }
 
 function PhotoField({ preview, onChange }: { preview: string; onChange: (event: ChangeEvent<HTMLInputElement>) => void }) {
