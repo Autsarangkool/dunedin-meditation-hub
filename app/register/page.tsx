@@ -1,352 +1,249 @@
 "use client";
 
-import { type ChangeEvent, type FormEvent, type ReactNode, useState } from "react";
+import Link from "next/link";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+  useEffect,
+  useState,
+} from "react";
 import { supabase } from "@/lib/supabase";
+
+type Notice = { type: "success" | "error"; text: string } | null;
+
+const interests = [
+  ["guided_meditation", "Guided meditation"],
+  ["mindfulness", "Mindfulness"],
+  ["breath_meditation_anapanasati", "Breath meditation (Anapanasati)"],
+  ["walking_meditation", "Walking meditation"],
+  ["new_to_meditation", "New to meditation"],
+  ["no_preference", "No preference"],
+] as const;
+
+const goals = [
+  ["relax_reduce_stress", "Relax / reduce stress"],
+  ["improve_focus_concentration", "Improve focus & concentration"],
+  ["learn_how_to_meditate", "Learn how to meditate"],
+  ["improve_general_wellbeing", "Improve general wellbeing"],
+] as const;
+
+const referralSources = [
+  ["social_media", "Social media"],
+  ["friend_family", "Friend / family"],
+  ["poster_flyer", "Poster / flyer"],
+  ["sign_outside_venue", "Sign outside our venue"],
+  ["community_event", "Community event"],
+  ["other", "Other"],
+] as const;
 
 export default function RegisterPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState("");
   const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<Notice>(null);
 
-  function convertDateToISO(dateText: string) {
-    if (!dateText) return null;
+  useEffect(() => {
+    return () => {
+      if (photoPreview.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
 
-    const [day, month, year] = dateText.split("/").map((item) => item.trim());
-
-    if (!day || !month || !year) return null;
-
-    return `${year}-${month}-${day}`;
-  }
-
-  function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-
+  function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    if (photoPreview.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
     if (!file) {
       setPhotoFile(null);
       setPhotoPreview("");
       return;
     }
-
+    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+      setNotice({
+        type: "error",
+        text: "Please choose a JPG, PNG or WebP image no larger than 5 MB.",
+      });
+      event.target.value = "";
+      return;
+    }
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
   }
 
   async function uploadProfilePhoto() {
     if (!photoFile) return null;
-
-    const fileExt = photoFile.name.split(".").pop();
-    const fileName = `member-${Date.now()}.${fileExt}`;
-    const filePath = `profiles/${fileName}`;
-
+    const extension = photoFile.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `profiles/member-${Date.now()}-${crypto.randomUUID()}.${extension}`;
     const { error } = await supabase.storage
       .from("profile-photos")
-      .upload(filePath, photoFile, {
+      .upload(path, photoFile, {
         cacheControl: "3600",
         upsert: false,
+        contentType: photoFile.type,
       });
-
     if (error) throw error;
-
-    const { data } = supabase.storage
-      .from("profile-photos")
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
+    return supabase.storage.from("profile-photos").getPublicUrl(path).data.publicUrl;
   }
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (saving) return;
+    const form = event.currentTarget;
+    const data = new FormData(form);
     setSaving(true);
+    setNotice(null);
 
     try {
       const profilePhotoUrl = await uploadProfilePhoto();
-
       const payload = {
-        code_number: formData.get("code_number"),
-        full_name: formData.get("full_name"),
-        nickname: formData.get("nickname"),
-        gender: formData.get("gender"),
-        birth_date: convertDateToISO(formData.get("birth_date") as string),
-        nationality: formData.get("nationality"),
-
-        phone: formData.get("phone"),
-        email: formData.get("email"),
-        address: formData.get("address"),
-
-        meditated_before: formData.get("meditated_before"),
-        meditation_duration: formData.get("meditation_duration"),
-        meditation_preferences: formData.getAll("meditation_preferences"),
-        joining_goals: formData.getAll("joining_goals"),
-        joining_goal_other: formData.get("joining_goal_other"),
-
-        preferred_days: formData.get("preferred_days"),
-        referral_source: formData.get("referral_source"),
-        referral_other: formData.get("referral_other"),
-
-        consent_agreed: formData.get("consent_agreed") === "on",
-        signature_name: formData.get("signature_name"),
-        start_date: convertDateToISO(formData.get("start_date") as string),
-
+        code_number: emptyToNull(data.get("code_number")),
+        full_name: emptyToNull(data.get("full_name")),
+        nickname: emptyToNull(data.get("nickname")),
+        gender: emptyToNull(data.get("gender")),
+        birth_date: emptyToNull(data.get("birth_date")),
+        nationality: emptyToNull(data.get("nationality")),
+        phone: emptyToNull(data.get("phone")),
+        email: emptyToNull(data.get("email")),
+        address: emptyToNull(data.get("address")),
+        meditated_before: emptyToNull(data.get("meditated_before")),
+        meditation_duration: emptyToNull(data.get("meditation_duration")),
+        meditation_practice: emptyToNull(data.get("meditation_practice")),
+        meditation_preferences: data.getAll("meditation_preferences").map(String),
+        meditation_interest_other: emptyToNull(data.get("meditation_interest_other")),
+        joining_goals: data.getAll("joining_goals").map(String),
+        joining_goal_other: emptyToNull(data.get("joining_goal_other")),
+        preferred_days: emptyToNull(data.get("preferred_days")),
+        referral_source: emptyToNull(data.get("referral_source")),
+        referral_other: emptyToNull(data.get("referral_other")),
+        keep_in_touch: data.get("keep_in_touch") === "on",
+        consent_agreed: data.get("consent_agreed") === "on",
+        media_consent: emptyToNull(data.get("media_consent")),
+        signature_name: emptyToNull(data.get("signature_name")),
+        start_date: emptyToNull(data.get("start_date")),
         profile_photo_url: profilePhotoUrl,
       };
 
-      const { error } = await supabase.from("members").insert(payload);
+      const { data: member, error } = await supabase
+        .from("members")
+        .insert(payload)
+        .select("id, code_number")
+        .single();
+      if (error) throw error;
 
-      if (error) {
-        alert(error.message);
-        return;
-      }
-
-      alert("ลงทะเบียนสำเร็จ / Registration successful");
+      setNotice({
+        type: "success",
+        text: `Registration successful. Member ID: ${member?.code_number || "-"}`,
+      });
       form.reset();
+      if (photoPreview.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
       setPhotoFile(null);
       setPhotoPreview("");
-    } catch (error: any) {
-      alert(error.message || "Upload failed");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error: unknown) {
+      setNotice({ type: "error", text: getErrorMessage(error) });
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#f8f5ec] px-4 py-6 sm:px-6">
-      <RegisterBackground />
-
-      <div className="relative z-10 mx-auto max-w-5xl">
-        <section className="relative overflow-hidden rounded-[2.5rem] border border-white/75 bg-white/72 p-5 shadow-[0_30px_100px_rgba(15,23,42,0.10)] backdrop-blur-2xl sm:p-8">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(167,243,208,0.65),transparent_36%),radial-gradient(circle_at_bottom_left,rgba(186,230,253,0.45),transparent_34%)]" />
-          <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-emerald-200/45 blur-3xl" />
-          <div className="pointer-events-none absolute -left-20 bottom-[-90px] h-80 w-80 rounded-full bg-sky-200/35 blur-3xl" />
-          <div className="pointer-events-none absolute right-8 top-8 text-6xl opacity-25">
-            🕊️
-          </div>
-          <div className="pointer-events-none absolute bottom-8 right-24 text-5xl opacity-25">
-            🌸
-          </div>
-          <div className="pointer-events-none absolute bottom-8 left-8 text-5xl opacity-20">
-            🌿
-          </div>
-
-          <div className="relative">
-            <a
-              href="/"
-              className="inline-flex rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-100 transition hover:-translate-y-0.5 hover:shadow-xl"
-            >
-              🏠 กลับหน้าหลัก
-            </a>
-
-            <div className="mt-8">
-              <p className="inline-flex rounded-full border border-emerald-100 bg-white/75 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-emerald-700 shadow-sm backdrop-blur">
-                Membership Registration
-              </p>
-
-              <p className="mt-5 text-sm font-semibold text-amber-700">
-                Take an hour to unwind, refocus, and reset.
-              </p>
-
-              <h1 className="mt-3 text-4xl font-black tracking-tight text-emerald-900 sm:text-5xl">
-                Mindfulness Meditation Membership Form
-              </h1>
-
-              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600 sm:text-base">
-                DIRI – Dunedin Meditation Hub
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <form onSubmit={handleSubmit} className="mt-8 grid gap-5 md:grid-cols-2">
-          <FormSection
-            title="รูปโปรไฟล์ / Profile Photo"
-            subtitle="อัปโหลดรูปสมาชิก เพื่อให้ระบบจำแนกและจัดการข้อมูลได้ง่ายขึ้น"
-            icon="🙏"
-          >
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-emerald-50 to-sky-50 text-5xl shadow-inner ring-4 ring-white">
-                {photoPreview ? (
-                  <img
-                    src={photoPreview}
-                    alt="Profile preview"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span>🙏</span>
-                )}
-              </div>
-
-              <div className="flex-1">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="w-full rounded-2xl border border-emerald-100 bg-white/85 p-3 text-sm font-medium text-slate-600 shadow-sm file:mr-4 file:rounded-xl file:border-0 file:bg-emerald-600 file:px-4 file:py-2 file:font-bold file:text-white hover:file:bg-emerald-700"
-                />
-
-                <p className="mt-3 text-sm text-slate-500">
-                  แนะนำรูปหน้าชัด ๆ ไฟล์ JPG หรือ PNG
-                </p>
+    <main className="min-h-screen bg-[#edf3ee] px-3 py-5 text-[#34483b] sm:px-6 sm:py-10">
+      <div className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-[#cdd8cf] bg-[#fffefb] shadow-[0_24px_70px_rgba(44,68,52,.14)]">
+        <header className="border-b border-[#425a49] px-5 py-6 sm:px-10">
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
+            <div className="flex items-center gap-4">
+              <div className="grid h-16 w-16 place-items-center rounded-full border border-[#b8a36a] bg-[#f8f2df] text-3xl">◉</div>
+              <div>
+                <p className="text-2xl font-bold tracking-[.14em] text-[#987b2c]">DIRI</p>
+                <p className="text-xs text-[#796a43]">Dhammachai International Research Institute</p>
               </div>
             </div>
-          </FormSection>
-
-          <TextInput name="code_number" placeholder="Code Number" />
-          <TextInput name="full_name" placeholder="Full Name" required />
-          <TextInput name="nickname" placeholder="Preferred Name / Nickname" />
-
-          <SelectInput name="gender">
-            <option value="">Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </SelectInput>
-
-          <TextInput
-            name="birth_date"
-            type="text"
-            inputMode="numeric"
-            placeholder="Date of Birth DD/MM/YYYY"
-            pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$"
-          />
-
-          <TextInput name="nationality" placeholder="Nationality" />
-          <TextInput name="phone" type="tel" placeholder="Phone Number" />
-          <TextInput name="email" type="email" placeholder="Email" />
-
-          <textarea
-            name="address"
-            className="min-h-28 rounded-2xl border border-emerald-100 bg-white/85 p-4 font-medium text-slate-800 outline-none shadow-sm backdrop-blur placeholder:text-slate-400 focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100 md:col-span-2"
-            placeholder="Address"
-            rows={3}
-          />
-
-          <FormSection
-            title="Meditation Experience"
-            subtitle="ประสบการณ์การนั่งสมาธิของสมาชิก"
-            icon="🌿"
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <SelectInput name="meditated_before">
-                <option value="">Have you meditated before?</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </SelectInput>
-
-              <SelectInput name="meditation_duration">
-                <option value="">If yes, how long?</option>
-                <option value="less_than_3_months">Less than 3 months</option>
-                <option value="3_to_12_months">3–12 months</option>
-                <option value="more_than_1_year">More than 1 year</option>
-              </SelectInput>
+            <div className="sm:text-right">
+              <h1 className="font-serif text-2xl font-bold uppercase tracking-wide sm:text-3xl">Dunedin Meditation Hub</h1>
+              <p className="font-serif text-lg uppercase">Meditation Program Registration</p>
+              <p className="text-sm text-[#69736c]">DIRI · Dhammachai International Research Institute</p>
+              <p className="mt-1 font-serif italic">Take an hour to unwind, refocus and reset.</p>
             </div>
-          </FormSection>
-
-          <FormSection
-            title="Preferred Meditation Style"
-            subtitle="Select all that apply"
-            icon="🕊️"
-          >
-            <div className="grid gap-3 md:grid-cols-2">
-              {[
-                ["mindfulness_meditation", "Mindfulness Meditation"],
-                ["breathing_awareness", "Breathing Awareness"],
-                ["loving_kindness_metta", "Loving-Kindness (Metta)"],
-                ["walking_meditation", "Walking Meditation"],
-                ["reduce_stress", "Reduce Stress"],
-                ["relaxation", "Relaxation"],
-                ["mental_clarity", "Mental Clarity"],
-                ["spiritual_growth", "Spiritual Growth"],
-                ["improve_focus", "Improve Focus"],
-                ["happiness", "Happiness"],
-              ].map(([value, label]) => (
-                <CheckboxCard
-                  key={value}
-                  name="meditation_preferences"
-                  value={value}
-                >
-                  {label}
-                </CheckboxCard>
-              ))}
+          </div>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+            <Link href="/" className="rounded-md border border-[#b8c6ba] px-4 py-2 text-sm font-semibold hover:bg-[#edf3ee]">← Back to home</Link>
+            <p className="text-xs text-[#69736c]">Fields marked Optional do not need to be completed.</p>
+          </div>
+          {notice && (
+            <div role="status" className={`mt-5 rounded-lg border px-4 py-3 text-sm font-semibold ${notice.type === "success" ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-red-300 bg-red-50 text-red-800"}`}>
+              {notice.text}
             </div>
-          </FormSection>
+          )}
+        </header>
 
-          <FormSection title="Goals for Joining" icon="🌸">
-            <div className="grid gap-3 md:grid-cols-2">
-              {[
-                ["relaxation", "Relaxation"],
-                ["mental_clarity", "Mental clarity"],
-                ["spiritual_growth", "Spiritual growth"],
-                ["improve_focus", "Improve focus"],
-              ].map(([value, label]) => (
-                <CheckboxCard key={value} name="joining_goals" value={value}>
-                  {label}
-                </CheckboxCard>
-              ))}
-
-              <input
-                name="joining_goal_other"
-                className="rounded-2xl border border-emerald-100 bg-white/85 p-4 font-medium text-slate-800 outline-none shadow-sm backdrop-blur placeholder:text-slate-400 focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100 md:col-span-2"
-                placeholder="Other goal"
-              />
+        <form onSubmit={handleSubmit} className="px-5 py-6 sm:px-10 sm:py-8">
+          <Section number="1" title="Participant Details">
+            <div className="grid gap-x-7 gap-y-5 md:grid-cols-2">
+              <Field name="full_name" label="Full name" required />
+              <Field name="nickname" label="Preferred name / nickname" />
+              <Field name="birth_date" label="Date of birth" type="date" optional />
+              <RadioGroup name="gender" label="Gender" optional options={[["male","Male"],["female","Female"],["prefer_not_to_say","Prefer not to say"]]} />
+              <Field name="nationality" label="Nationality" optional />
+              <Field name="email" label="Email" type="email" />
+              <Field name="phone" label="Mobile / phone" type="tel" optional />
+              <Field name="address" label="Residential address" optional hint="Kept private" />
+              <Field name="code_number" label="Member ID / Code number" optional hint="Leave blank to create automatically" />
+              <PhotoField preview={photoPreview} onChange={handlePhotoChange} />
             </div>
-          </FormSection>
+          </Section>
 
-          <SelectInput name="preferred_days">
-            <option value="">Preferred Days</option>
-            <option value="thursday">Thursday</option>
-            <option value="friday">Friday</option>
-            <option value="both">Both days</option>
-          </SelectInput>
+          <Section number="2" title="Your Meditation & Session Preferences">
+            <div className="grid gap-8 lg:grid-cols-2">
+              <div className="space-y-6">
+                <Group title="Meditation Experience">
+                  <RadioGroup name="meditated_before" label="Meditated before?" options={[["yes","Yes"],["no","No"]]} />
+                  <RadioGroup name="meditation_duration" label="If yes" options={[["less_than_3_months","Less than 3 months"],["3_to_12_months","3–12 months"],["1_to_3_years","1–3 years"],["more_than_3_years","More than 3 years"]]} />
+                  <RadioGroup name="meditation_practice" label="Practice" options={[["regularly","Regularly"],["occasionally","Occasionally"]]} />
+                </Group>
+                <Group title="Your Goals" subtitle="What would you like to gain from joining? Select all that apply.">
+                  <CheckList name="joining_goals" options={goals} />
+                  <LineInput name="joining_goal_other" label="Other" />
+                </Group>
+              </div>
+              <div className="space-y-6">
+                <Group title="Meditation Interests">
+                  <CheckList name="meditation_preferences" options={interests} columns />
+                  <LineInput name="meditation_interest_other" label="Other" />
+                </Group>
+                <Group title="Session Preference" subtitle="Which day are you most likely to attend?">
+                  <RadioGroup name="preferred_days" label="" options={[["thursday","Thursday"],["friday","Friday"],["either_day","Either day"],["varies_not_sure","Varies / Not sure"]]} />
+                </Group>
+                <Group title="How Did You First Hear About Us?" subtitle="Select one">
+                  <RadioGroup name="referral_source" label="" options={referralSources} />
+                  <LineInput name="referral_other" label="Other details" />
+                </Group>
+              </div>
+            </div>
+          </Section>
 
-          <SelectInput name="referral_source">
-            <option value="">How did you hear about us?</option>
-            <option value="social_media">Social Media</option>
-            <option value="friends_family">Friends / Family</option>
-            <option value="poster">Poster</option>
-            <option value="walk_in">Walk-in</option>
-            <option value="other">Other</option>
-          </SelectInput>
+          <Section number="3" title="Communication & Participation">
+            <div className="grid gap-8 lg:grid-cols-2">
+              <Group title="Keeping in Touch" subtitle="We may contact you about your registration or sessions.">
+                <Check name="keep_in_touch">Yes, I’d like to receive occasional updates about future sessions and events.</Check>
+              </Group>
+              <Group title="Participant Acknowledgement" subtitle="Please help us maintain a calm and respectful environment by being mindful of others, keeping phones on silent, and following the facilitator’s guidance. If you feel unwell or need assistance, please let a facilitator know.">
+                <Check name="consent_agreed" required>I understand and agree to respect these guidelines.</Check>
+              </Group>
+            </div>
+          </Section>
 
-          <TextInput
-            name="referral_other"
-            placeholder="Referral other"
-            className="md:col-span-2"
-          />
+          <Section number="4" title="Photo & Media Consent">
+            <p className="mb-4 text-sm leading-6">Photos or videos may be taken during sessions or events for use on Dunedin Meditation Hub’s Facebook page and promotional materials. Your choice will not affect your ability to participate. Please select one:</p>
+            <RadioCards name="media_consent" required options={[["yes","YES","I consent to the use of my photo/video as described above."],["yes_no_name","YES — NO NAME","I consent, but please do not use my name or other identifying information."],["no","NO","I do not consent to being intentionally photographed or filmed."]]} />
+          </Section>
 
-          <FormSection title="Consent" icon="🍃">
-            <label className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-white/75 p-4 shadow-sm backdrop-blur">
-              <input
-                name="consent_agreed"
-                type="checkbox"
-                required
-                className="mt-1 h-5 w-5 accent-emerald-600"
-              />
+          <div className="mt-7 grid items-end gap-5 md:grid-cols-[1fr_240px]">
+            <Field name="signature_name" label="Participant signature / Full name" required />
+            <Field name="start_date" label="Date" type="date" required />
+          </div>
+          <p className="mt-3 text-xs italic text-[#69736c]">I confirm that the information provided above is accurate and reflects my choices.</p>
 
-              <span className="font-medium leading-6 text-slate-700">
-                I agree to participate in the meditation sessions organised by
-                DIRI.
-              </span>
-            </label>
-          </FormSection>
-
-          <TextInput name="signature_name" placeholder="Signature / Full Name" />
-
-          <TextInput
-            name="start_date"
-            type="text"
-            inputMode="numeric"
-            placeholder="Start Date DD/MM/YYYY"
-            pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$"
-          />
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 text-lg font-black text-white shadow-xl shadow-emerald-100 transition hover:-translate-y-0.5 hover:shadow-2xl disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-400 md:col-span-2"
-          >
-            {saving ? "กำลังบันทึก..." : "บันทึกข้อมูล / Register"}
+          <button type="submit" disabled={saving} className="mt-7 w-full rounded-lg bg-[#405949] px-6 py-4 text-base font-bold uppercase tracking-wider text-white shadow-lg transition hover:bg-[#304438] disabled:cursor-not-allowed disabled:opacity-60">
+            {saving ? "Saving registration…" : "Submit Registration"}
           </button>
         </form>
       </div>
@@ -354,148 +251,62 @@ export default function RegisterPage() {
   );
 }
 
-function RegisterBackground() {
+function Section({ number, title, children }: { number: string; title: string; children: ReactNode }) {
   return (
-    <>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.16),transparent_34%),radial-gradient(circle_at_18%_18%,rgba(56,189,248,0.12),transparent_28%),linear-gradient(135deg,#f8fbf6_0%,#fff8ec_48%,#eef9f4_100%)]"
-      >
-        <div className="absolute -right-32 -top-32 h-[620px] w-[620px] rounded-full bg-emerald-300/25 blur-3xl" />
-        <div className="absolute left-[18%] top-[-120px] h-[460px] w-[560px] rounded-full bg-sky-200/28 blur-3xl" />
-        <div className="absolute -left-28 bottom-10 h-[520px] w-[520px] rounded-full bg-amber-200/28 blur-3xl" />
-        <div className="absolute bottom-[-160px] right-[22%] h-[520px] w-[520px] rounded-full bg-lime-200/25 blur-3xl" />
-
-        <div className="absolute right-12 top-28 text-6xl opacity-25">🕊️</div>
-        <div className="absolute left-[12%] bottom-28 text-6xl opacity-20">
-          🌿
-        </div>
-        <div className="absolute right-[20%] bottom-20 text-5xl opacity-20">
-          🌸
-        </div>
+    <section className="mb-8">
+      <div className="mb-5 flex items-stretch border-b border-[#87978b]">
+        <span className="grid min-w-28 place-items-center bg-[#405949] px-5 py-1 text-sm font-bold text-white sm:min-w-48">{number}</span>
+        <h2 className="px-3 py-1 font-serif text-sm font-bold uppercase sm:text-base">{title}</h2>
       </div>
-
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed bottom-0 left-0 z-0 w-full opacity-30"
-      >
-        <svg
-          viewBox="0 0 1440 240"
-          className="h-auto w-full fill-sky-200"
-          preserveAspectRatio="none"
-        >
-          <path d="M0,144L60,133.3C120,123,240,101,360,112C480,123,600,165,720,165.3C840,165,960,123,1080,122.7C1200,123,1320,165,1380,186.7L1440,208L1440,320L0,320Z" />
-        </svg>
-      </div>
-    </>
-  );
-}
-
-function FormSection({
-  title,
-  subtitle,
-  icon,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  icon: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-white/75 bg-white/78 p-5 shadow-[0_20px_65px_rgba(15,23,42,0.09)] backdrop-blur-2xl md:col-span-2">
-      <div className="pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full bg-emerald-200/35 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-5 right-6 text-4xl opacity-10">
-        {icon}
-      </div>
-
-      <div className="relative">
-        <div className="mb-5 flex items-start gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-sky-50 text-2xl shadow-inner ring-1 ring-emerald-100">
-            {icon}
-          </div>
-
-          <div>
-            <h2 className="text-lg font-black text-emerald-950">{title}</h2>
-            {subtitle && (
-              <p className="mt-1 text-sm font-medium text-slate-500">
-                {subtitle}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {children}
-      </div>
+      {children}
     </section>
   );
 }
 
-function TextInput({
-  name,
-  placeholder,
-  type = "text",
-  required,
-  inputMode,
-  pattern,
-  className = "",
-}: {
-  name: string;
-  placeholder: string;
-  type?: string;
-  required?: boolean;
-  inputMode?: "text" | "numeric" | "decimal" | "tel" | "search" | "email" | "url";
-  pattern?: string;
-  className?: string;
-}) {
-  return (
-    <input
-      name={name}
-      type={type}
-      required={required}
-      inputMode={inputMode}
-      pattern={pattern}
-      className={`rounded-2xl border border-emerald-100 bg-white/85 p-4 font-medium text-slate-800 outline-none shadow-sm backdrop-blur placeholder:text-slate-400 focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100 ${className}`}
-      placeholder={placeholder}
-    />
-  );
+function Group({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
+  return <div><h3 className="font-serif text-sm font-bold uppercase">{title}</h3>{subtitle && <p className="mb-2 text-xs italic text-[#69736c]">{subtitle}</p>}<div className="mt-2 space-y-3">{children}</div></div>;
 }
 
-function SelectInput({
-  name,
-  children,
-}: {
-  name: string;
-  children: ReactNode;
-}) {
+function Field({ name, label, type = "text", required, optional, hint }: { name: string; label: string; type?: string; required?: boolean; optional?: boolean; hint?: string }) {
   return (
-    <select
-      name={name}
-      className="rounded-2xl border border-emerald-100 bg-white/85 p-4 font-medium text-slate-800 outline-none shadow-sm backdrop-blur focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100"
-    >
-      {children}
-    </select>
-  );
-}
-
-function CheckboxCard({
-  name,
-  value,
-  children,
-}: {
-  name: string;
-  value: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-emerald-100 bg-white/75 p-4 font-medium text-slate-700 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md">
-      <input
-        type="checkbox"
-        name={name}
-        value={value}
-        className="h-5 w-5 accent-emerald-600"
-      />
-      <span>{children}</span>
+    <label className="block">
+      <span className="mb-1 block text-sm font-bold">{label} {optional && <small className="font-normal text-[#69736c]">(Optional)</small>} {hint && <small className="font-serif font-normal italic text-[#69736c]">— {hint}</small>}</span>
+      <input name={name} type={type} required={required} className="h-11 w-full border-0 border-b border-[#aebbb0] bg-transparent px-1 text-[#27352c] outline-none transition focus:border-[#405949] focus:ring-0" />
     </label>
   );
+}
+
+function RadioGroup({ name, label, options, optional }: { name: string; label: string; options: readonly (readonly [string,string])[]; optional?: boolean }) {
+  return <fieldset><legend className="mb-2 text-sm font-bold">{label} {optional && <small className="font-normal text-[#69736c]">(Optional)</small>}</legend><div className="flex flex-wrap gap-x-5 gap-y-2">{options.map(([value,text]) => <label key={value} className="flex cursor-pointer items-center gap-2 text-sm"><input type="radio" name={name} value={value} className="h-4 w-4 accent-[#405949]" />{text}</label>)}</div></fieldset>;
+}
+
+function CheckList({ name, options, columns }: { name: string; options: readonly (readonly [string,string])[]; columns?: boolean }) {
+  return <div className={columns ? "grid gap-2 sm:grid-cols-2" : "space-y-2"}>{options.map(([value,text]) => <Check key={value} name={name} value={value}>{text}</Check>)}</div>;
+}
+
+function Check({ name, value, required, children }: { name: string; value?: string; required?: boolean; children: ReactNode }) {
+  return <label className="flex cursor-pointer items-start gap-2 text-sm leading-5"><input type="checkbox" name={name} value={value} required={required} className="mt-0.5 h-4 w-4 shrink-0 accent-[#405949]" /><span>{children}</span></label>;
+}
+
+function LineInput({ name, label }: { name: string; label: string }) {
+  return <label className="flex items-end gap-2 text-sm"><span>{label}:</span><input name={name} className="min-w-0 flex-1 border-0 border-b border-[#87978b] bg-transparent px-1 outline-none focus:border-[#405949] focus:ring-0" /></label>;
+}
+
+function RadioCards({ name, options, required }: { name: string; options: readonly (readonly [string,string,string])[]; required?: boolean }) {
+  return <fieldset className="grid gap-3 md:grid-cols-3">{options.map(([value,title,description]) => <label key={value} className="cursor-pointer rounded-lg border border-[#cdd8cf] p-4 transition hover:bg-[#f3f5f1]"><span className="flex items-center gap-2 font-bold"><input type="radio" name={name} value={value} required={required} className="h-4 w-4 accent-[#405949]" />{title}</span><span className="mt-2 block text-xs leading-5">{description}</span></label>)}</fieldset>;
+}
+
+function PhotoField({ preview, onChange }: { preview: string; onChange: (event: ChangeEvent<HTMLInputElement>) => void }) {
+  return <label className="block"><span className="mb-2 block text-sm font-bold">Profile photo <small className="font-normal text-[#69736c]">(Optional)</small></span><div className="flex items-center gap-3">{preview ? <img src={preview} alt="Profile preview" className="h-14 w-14 rounded-full border border-[#cdd8cf] object-cover" /> : <span className="grid h-14 w-14 place-items-center rounded-full border border-[#cdd8cf] bg-[#f3f5f1] text-xl">☺</span>}<input type="file" accept="image/png,image/jpeg,image/webp" onChange={onChange} className="min-w-0 text-xs file:mr-3 file:rounded file:border-0 file:bg-[#405949] file:px-3 file:py-2 file:text-white" /></div></label>;
+}
+
+function emptyToNull(value: FormDataEntryValue | null) {
+  const text = value === null ? "" : String(value).trim();
+  return text || null;
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) return String(error.message);
+  return "Registration failed. Please try again.";
 }
