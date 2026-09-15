@@ -147,7 +147,7 @@ export default async function Home() {
               />
 
               <StatCard
-                icon="❄️"
+                icon="☀️"
                 title="เช็คอินวันนี้ / Today"
                 value={totalCheckinsToday}
                 unit="ครั้ง"
@@ -155,7 +155,7 @@ export default async function Home() {
               />
 
               <StatCard
-                icon="🌲"
+                icon="🌊"
                 title="เช็คอินเดือนนี้ / This Month"
                 value={totalCheckinsThisMonth}
                 unit="ครั้ง"
@@ -291,7 +291,7 @@ export default async function Home() {
 
               <GlassSection
                 eyebrow="New friends"
-                title="❄️ สมาชิกใหม่ล่าสุด / Latest Members"
+                title="🌺 สมาชิกใหม่ล่าสุด / Latest Members"
               >
                 <div className="space-y-3">
                   {latestMembers.map((member) => (
@@ -320,7 +320,7 @@ export default async function Home() {
 
               <GlassSection
                 eyebrow="Upcoming practice"
-                title="🌲 Sessions ล่าสุด / Latest Sessions"
+                title="🌊 Sessions ล่าสุด / Latest Sessions"
               >
                 <div className="space-y-3">
                   {latestSessions.map((session) => (
@@ -405,7 +405,7 @@ function DashboardSidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-[290px] shrink-0 overflow-y-auto border-r border-sky-100/80 bg-white/72 p-6 shadow-[18px_0_70px_rgba(56,189,248,0.08)] backdrop-blur-2xl lg:flex lg:flex-col">
       <div className="flex items-center gap-3">
-        <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-gradient-to-br from-blue-500 via-sky-400 to-emerald-400 text-3xl text-white shadow-lg shadow-sky-200/70 ring-1 ring-white">
+        <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-gradient-to-br from-emerald-500 via-teal-400 to-sky-400 text-3xl text-white shadow-lg shadow-sky-200/70 ring-1 ring-white">
           🪷
         </div>
 
@@ -415,12 +415,12 @@ function DashboardSidebar() {
             Meditation Hub
           </p>
           <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.16em] text-sky-500">
-            Winter Sanctuary
+            Summer Sanctuary
           </p>
         </div>
       </div>
 
-      <div className="my-6 h-px bg-gradient-to-r from-transparent via-sky-200 to-transparent" />
+      <div className="my-6 h-px bg-gradient-to-r from-transparent via-teal-200 to-transparent" />
 
       <nav className="space-y-2">
         {links.map((link) => (
@@ -429,10 +429,10 @@ function DashboardSidebar() {
       </nav>
 
       <div className="mt-auto pt-6">
-        <div className="relative overflow-hidden rounded-[1.6rem] border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-emerald-50/70 p-4 shadow-lg">
+        <div className="relative overflow-hidden rounded-[1.6rem] border border-sky-100 bg-gradient-to-br from-white via-teal-50/80 to-emerald-50/70 p-4 shadow-lg">
           <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-sky-200/50 blur-2xl" />
           <div className="pointer-events-none absolute bottom-2 right-3 text-3xl opacity-25">
-            ❄️
+            ☀️
           </div>
 
           <div className="relative flex items-center gap-3">
@@ -455,7 +455,7 @@ function MobileBrandBar() {
   return (
     <div className="mb-5 flex items-center justify-between rounded-[1.5rem] border border-sky-100 bg-white/80 p-3 shadow-lg shadow-sky-100/40 backdrop-blur-xl lg:hidden">
       <Link href="/" className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-sky-400 to-emerald-400 text-xl text-white">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 via-teal-400 to-sky-400 text-xl text-white">
           🪷
         </div>
 
@@ -464,7 +464,7 @@ function MobileBrandBar() {
             Dunedin Meditation Hub
           </p>
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-500">
-            Winter Sanctuary
+            Summer Sanctuary
           </p>
         </div>
       </Link>
@@ -476,60 +476,39 @@ function MobileBrandBar() {
 
 function DashboardBackground() {
   return (
-    <>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
-      >
-        <div className="absolute -right-36 -top-36 h-[620px] w-[620px] rounded-full bg-sky-300/30 blur-3xl" />
-        <div className="absolute left-[16%] top-[-150px] h-[500px] w-[620px] rounded-full bg-cyan-200/34 blur-3xl" />
-        <div className="absolute -left-36 bottom-10 h-[520px] w-[520px] rounded-full bg-blue-100/60 blur-3xl" />
-        <div className="absolute bottom-[-180px] right-[18%] h-[560px] w-[560px] rounded-full bg-emerald-100/48 blur-3xl" />
-
-        <div className="absolute right-[7%] top-24 text-5xl opacity-20">
-          ❄️
-        </div>
-        <div className="absolute left-[20%] top-[34%] text-4xl opacity-15">
-          ❄️
-        </div>
-        <div className="absolute bottom-[12%] right-[26%] text-5xl opacity-15">
-          🌲
-        </div>
-      </div>
-
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed bottom-0 left-0 z-0 w-full opacity-35"
-      >
-        <svg
-          viewBox="0 0 1440 240"
-          className="h-auto w-full fill-sky-200"
-          preserveAspectRatio="none"
-        >
-          <path d="M0,144L60,133.3C120,123,240,101,360,112C480,123,600,165,720,165.3C840,165,960,123,1080,122.7C1200,123,1320,165,1380,186.7L1440,208L1440,320L0,320Z" />
-        </svg>
-      </div>
-    </>
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#effcf6]"
+    >
+      <img
+        src="/images/summer-sanctuary-background.png"
+        alt=""
+        className="h-full w-full object-cover object-center"
+      />
+      <div className="absolute inset-0 bg-white/12" />
+    </div>
   );
 }
 
 function HeroHeader() {
   return (
-    <header className="relative overflow-hidden rounded-[2.4rem] border border-sky-100/90 bg-white/82 p-6 shadow-[0_30px_90px_rgba(56,189,248,0.16)] backdrop-blur-2xl sm:p-8 lg:min-h-[300px]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(186,230,253,0.72),transparent_37%),radial-gradient(circle_at_bottom_left,rgba(167,243,208,0.38),transparent_36%),linear-gradient(145deg,rgba(255,255,255,0.95),rgba(239,249,255,0.78))]" />
-      <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-cyan-200/50 blur-3xl" />
-
-      <div className="pointer-events-none absolute bottom-0 right-0 hidden w-[440px] lg:block xl:w-[520px]">
-        <WinterLandscape />
-      </div>
+    <header className="relative overflow-hidden rounded-[2.4rem] border border-cyan-100/90 bg-gradient-to-r from-white via-cyan-50 to-sky-100 p-6 shadow-[0_30px_90px_rgba(8,145,178,0.2)] backdrop-blur-2xl sm:p-8 lg:min-h-[330px]">
+      <img
+        src="/images/summer-sanctuary-hero.png"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-[center_52%] lg:block"
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white via-white/95 to-transparent lg:via-white/75" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-[62%] bg-[radial-gradient(circle_at_bottom_left,rgba(255,237,213,0.72),transparent_52%)]" />
 
       <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-        <div className="max-w-3xl lg:max-w-[58%]">
+        <div className="max-w-3xl lg:max-w-[56%]">
           <p className="inline-flex rounded-full border border-sky-100 bg-white/80 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-sky-600 shadow-sm backdrop-blur">
-            ❄️ Mindfulness • Community • Wellbeing
+            ☀️ Mindfulness • Community • Wellbeing
           </p>
 
-          <h1 className="winter-title mt-5 text-4xl font-black leading-[0.98] tracking-tight sm:text-6xl xl:text-7xl">
+          <h1 className="mt-5 text-4xl font-black leading-[0.98] tracking-tight text-slate-950 sm:text-6xl xl:text-7xl">
             Dunedin Meditation Hub
           </h1>
 
@@ -539,7 +518,10 @@ function HeroHeader() {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/checkin" className="winter-button">
+            <Link
+              href="/checkin"
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-500 to-sky-400 px-5 py-3 text-sm font-black text-white shadow-lg shadow-cyan-200/60 transition hover:-translate-y-0.5 hover:shadow-xl"
+            >
               ✓ Check-In Member
             </Link>
 
@@ -560,103 +542,64 @@ function HeroHeader() {
   );
 }
 
-function WinterLandscape() {
+function DunedinSummerLandscape() {
   return (
     <svg
       viewBox="0 0 620 330"
-      className="h-auto w-full drop-shadow-[0_20px_28px_rgba(56,189,248,0.16)]"
+      className="h-auto w-full drop-shadow-[0_20px_28px_rgba(8,145,178,0.2)]"
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="homeWinterSky" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#e9f8ff" />
-          <stop offset="55%" stopColor="#c9efff" />
-          <stop offset="100%" stopColor="#edfff8" />
+        <linearGradient id="dunedinSummerSky" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#dff8ff" />
+          <stop offset="58%" stopColor="#a5e8f5" />
+          <stop offset="100%" stopColor="#fff1b8" />
         </linearGradient>
-        <linearGradient id="homeSnow" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="100%" stopColor="#dff4ff" />
+        <linearGradient id="otagoHarbour" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#45c9df" />
+          <stop offset="100%" stopColor="#0b91bd" />
         </linearGradient>
       </defs>
+      <rect x="60" y="35" width="560" height="295" rx="48" fill="url(#dunedinSummerSky)" opacity="0.96" />
+      <circle cx="514" cy="78" r="34" fill="#ffe783" opacity="0.95" />
 
-      <path
-        d="M60 232 167 114l71 70 73-108 112 122 68-65 129 108v89H60Z"
-        fill="url(#homeWinterSky)"
-        opacity="0.98"
-      />
-      <path
-        d="m167 114 32 32 39 38 28-41 45-67 42 46 70 76 25-24 43-41 129 108v89H60v-98Z"
-        fill="#d9f1ff"
-      />
-      <path
-        d="M60 255c92-40 174-34 252 5 77 38 169 35 308-8v78H60Z"
-        fill="url(#homeSnow)"
-      />
+      <path d="M60 194c65-54 119-69 181-37 60 31 99 22 155-20 65-49 133-39 224 30v80H60Z" fill="#73bd79" />
+      <path d="M60 215c84-32 151-25 221 9 74 35 159 27 339-31v137H60Z" fill="url(#otagoHarbour)" />
+      <path d="M60 284c108-24 188-14 278 16 79 26 166 20 282-12v42H60Z" fill="#b9f0e1" opacity="0.85" />
 
-      <circle cx="492" cy="72" r="30" fill="#fff5bd" opacity="0.92" />
-
-      <g transform="translate(356 153)">
-        <rect x="22" y="55" width="108" height="75" rx="9" fill="#d8945d" />
-        <path d="M8 65 76 14l69 51Z" fill="#925b48" />
-        <path d="M8 65 76 14l69 51-9 5-60-44-59 44Z" fill="#ffffff" />
-        <rect x="65" y="86" width="26" height="44" rx="3" fill="#6c4234" />
-        <rect x="34" y="79" width="20" height="20" rx="3" fill="#ffe7a1" />
-        <rect x="102" y="79" width="20" height="20" rx="3" fill="#ffe7a1" />
-        <rect x="110" y="21" width="13" height="31" rx="3" fill="#80503c" />
+      <g fill="#ffffff" opacity="0.95">
+        <path d="M330 225l22-42 22 42Z" />
+        <rect x="350" y="221" width="4" height="32" rx="2" />
+        <path d="M435 243l18-35 18 35Z" />
+        <rect x="451" y="240" width="4" height="27" rx="2" />
       </g>
 
-      <g transform="translate(500 165)">
-        <circle cx="39" cy="78" r="35" fill="#ffffff" />
-        <circle cx="39" cy="33" r="26" fill="#ffffff" />
-        <circle cx="31" cy="29" r="3" fill="#23496c" />
-        <circle cx="48" cy="29" r="3" fill="#23496c" />
-        <path d="m39 36 14 4-14 5Z" fill="#ff9f43" />
-        <path
-          d="M24 45c10 8 21 8 31 0"
-          fill="none"
-          stroke="#55b7cf"
-          strokeWidth="6"
-          strokeLinecap="round"
-        />
-        <path d="M20 17c5-22 33-24 42-3l-6 7H24Z" fill="#4a91df" />
-        <path
-          d="M23 16h36"
-          stroke="#256ebf"
-          strokeWidth="7"
-          strokeLinecap="round"
-        />
-        <path
-          d="m7 62-25-19M71 62l24-21"
-          stroke="#885637"
-          strokeWidth="5"
-          strokeLinecap="round"
-        />
+      <g transform="translate(415 144)">
+        <rect x="8" y="73" width="142" height="55" rx="5" fill="#c88b56" />
+        <path d="M0 76 78 39l82 37Z" fill="#713e35" />
+        <rect x="63" y="10" width="30" height="105" rx="3" fill="#d9a36a" />
+        <path d="M58 15 78-8l20 23Z" fill="#365c50" />
+        <circle cx="78" cy="32" r="9" fill="#fff4c2" stroke="#5d4638" strokeWidth="3" />
+        <rect x="74" y="62" width="8" height="18" fill="#5d4638" />
+        {[22, 45, 108, 131].map((x) => (
+          <rect key={x} x={x} y="88" width="13" height="18" rx="2" fill="#fff1ad" />
+        ))}
       </g>
 
-      <g fill="#63add8">
-        <path d="M104 267 127 219l23 48Z" />
-        <path d="M112 242 127 205l16 37Z" />
-        <rect x="124" y="264" width="7" height="22" rx="3" />
-
-        <path d="M222 281 246 231l24 50Z" />
-        <path d="M230 255 246 217l17 38Z" />
-        <rect x="243" y="277" width="7" height="22" rx="3" />
+      <g fill="#fff7da" opacity="0.9">
+        <path d="M110 174l20-17 20 17v28h-40Z" />
+        <path d="M155 187l17-15 18 15v25h-35Z" />
+        <path d="M206 181l19-16 20 16v29h-39Z" />
       </g>
-
-      {[108, 198, 288, 384, 472, 560].map((x, index) => (
-        <g
-          key={x}
-          transform={`translate(${x} ${index % 2 ? 72 : 48})`}
-          opacity="0.72"
-        >
-          <path
-            d="M0-12V12M-12 0H12M-8-8 8 8M8-8-8 8"
-            stroke="#ffffff"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-        </g>
-      ))}
+      <g fill="none" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" opacity="0.9">
+        <path d="M300 90q12-10 24 0q12-10 24 0" />
+        <path d="M380 70q10-8 20 0q10-8 20 0" />
+      </g>
+      <g fill="#ef4444" opacity="0.9">
+        <circle cx="585" cy="115" r="8" />
+        <circle cx="600" cy="105" r="7" />
+        <circle cx="573" cy="99" r="6" />
+      </g>
     </svg>
   );
 }
@@ -667,7 +610,7 @@ function CheckinActionCard() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_right,rgba(255,255,255,0.42),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.16),transparent_34%)]" />
       <div className="absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/20 blur-3xl transition group-hover:scale-125" />
       <div className="absolute bottom-4 right-6 text-6xl opacity-25 transition group-hover:scale-110">
-        ❄️
+        🌊
       </div>
 
       <div className="relative flex h-full items-center gap-5 sm:gap-6">
@@ -730,7 +673,7 @@ function GoalCard({
 
         <div className="mt-5 h-3 overflow-hidden rounded-full bg-sky-100">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-blue-500 via-sky-400 to-emerald-400 transition-all"
+            className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -810,7 +753,7 @@ function BigStat({
     tone === "blue" ? "bg-sky-200/55" : "bg-emerald-200/55";
   const iconClass =
     tone === "blue"
-      ? "from-sky-50 to-blue-100 ring-sky-100"
+      ? "from-sky-50 to-cyan-100 ring-sky-100"
       : "from-emerald-50 to-cyan-100 ring-emerald-100";
 
   return (
@@ -864,7 +807,7 @@ function StatCard({
     tone === "sky"
       ? "from-sky-50 to-cyan-100 text-sky-700 ring-sky-100"
       : tone === "blue"
-        ? "from-blue-50 to-sky-100 text-blue-700 ring-blue-100"
+        ? "from-emerald-50 to-sky-100 text-teal-700 ring-cyan-100"
         : "from-emerald-50 to-cyan-100 text-emerald-700 ring-emerald-100";
 
   return (
