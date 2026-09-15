@@ -59,7 +59,10 @@ export default function AttendancePage() {
       { data: memberData, error: memberError },
       { data: checkinData, error: checkinError },
     ] = await Promise.all([
-      supabase.from("members").select("*"),
+      supabase
+        .from("members")
+        .select("*")
+        .eq("is_deleted", false),
       loadAllCheckins(),
     ]);
 
@@ -124,6 +127,7 @@ export default function AttendancePage() {
           latestSession: stats?.latestSession || "-",
         };
       })
+      .filter((member) => member.totalAttendances > 0)
       .filter((member) => {
         if (!keyword) return true;
 
