@@ -5,6 +5,41 @@ import AuthButton from "./components/AuthButton";
 
 export const dynamic = "force-dynamic";
 
+async function loadAllCheckinsInPages() {
+  const pageSize = 1000;
+  const rows: any[] = [];
+  let from = 0;
+  let exactCount: number | null = null;
+
+  while (true) {
+    const { data, count, error } = await supabase
+      .from("checkins")
+      .select("*, members(*)", { count: "exact" })
+      .order("checkin_time", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      return { data: rows, count: exactCount, error };
+    }
+
+    if (exactCount === null) {
+      exactCount = count ?? 0;
+    }
+
+    const pageRows = data || [];
+    rows.push(...pageRows);
+
+    if (pageRows.length < pageSize) {
+      break;
+    }
+
+    from += pageSize;
+  }
+
+  return { data: rows, count: exactCount, error: null };
+}
+
 export default async function Home() {
   const today = new Date().toISOString().split("T")[0];
 
@@ -36,9 +71,15 @@ export default async function Home() {
     .select("*")
     .gte("checkin_date", monthStart);
 
-  const { data: allCheckins, count: totalCheckinsCount } = await supabase
-  .from("checkins")
-  .select("*, members(*)", { count: "exact" });
+  const {
+    data: allCheckins,
+    count: totalCheckinsCount,
+    error: allCheckinsError,
+  } = await loadAllCheckinsInPages();
+
+  if (allCheckinsError) {
+    console.error("LOAD ALL CHECKINS ERROR:", allCheckinsError);
+  }
 
   const { data: sessions } = await supabase
     .from("sessions")
@@ -49,7 +90,7 @@ export default async function Home() {
   const totalCheckinsToday = todayCheckins?.length || 0;
   const totalCheckinsThisMonth = monthCheckins?.length || 0;
   const totalCheckinsAllTime =
-  totalCheckinsCount ?? allCheckins?.length ?? 0;
+    totalCheckinsCount ?? allCheckins.length;
   const totalSessions = sessions?.length || 0;
 
   const checkinTarget = 2222;
