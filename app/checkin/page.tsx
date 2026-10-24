@@ -947,95 +947,52 @@ function PhotoConsentStatus({
     ? "อนุญาตให้ถ่ายภาพ"
     : denied
       ? "ไม่อนุญาตให้ถ่ายภาพ"
-      : "ยังไม่ระบุการอนุญาตถ่ายภาพ";
+      : "ยังไม่ระบุการถ่ายภาพ";
 
   const english = allowed
     ? "Photography permitted"
     : denied
-      ? "No photography"
+      ? "Please avoid taking photos"
       : "Please ask before taking photos";
 
-  const colorClass = allowed
-    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+  const tone = allowed
+    ? "border-emerald-200/70 bg-emerald-50/80 text-emerald-800"
     : denied
-      ? "border-red-300 bg-red-50 text-red-800"
+      ? "border-rose-200 bg-rose-50 text-rose-800"
       : "border-amber-200 bg-amber-50 text-amber-800";
 
+  const dot = allowed
+    ? "bg-emerald-500"
+    : denied
+      ? "bg-rose-500"
+      : "bg-amber-500";
+
   return (
-    <div
-      className={`${
-        compact
-          ? "inline-flex max-w-full gap-2 rounded-xl px-3 py-2 text-left"
-          : "flex w-full gap-3 rounded-2xl px-4 py-4 text-left"
-      } items-center border ${colorClass}`}
-    >
-      <span
-        aria-hidden="true"
-        className={`flex shrink-0 items-center justify-center ${
-          compact ? "h-7 w-7" : "h-11 w-11"
-        }`}
+    <div className={compact ? "max-w-full" : "w-full text-center"}>
+      <div
+        className={`inline-flex max-w-full items-center rounded-full border ${
+          compact ? "gap-2 px-3 py-1.5" : "gap-2.5 px-5 py-2.5"
+        } ${tone}`}
       >
-        {allowed || denied ? (
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-full w-full"
-          >
-            <path d="M14.5 4h-5L7.5 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.5Z" />
-            <circle cx="12" cy="13.5" r="3.5" />
+        <span
+          aria-hidden="true"
+          className={`h-2 w-2 shrink-0 rounded-full ${dot}`}
+        />
 
-            {denied && (
-              <path d="M2 2 22 22" strokeWidth="2.5" />
-            )}
-
-            {allowed && (
-              <path d="m16 3 2 2 4-4" strokeWidth="2.2" />
-            )}
-          </svg>
-        ) : (
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-full w-full"
-          >
-            <circle cx="12" cy="12" r="9" />
-            <path d="M9.5 9a2.5 2.5 0 0 1 5 .5c0 1.5-2.5 2-2.5 3.5" />
-            <path d="M12 17h.01" />
-          </svg>
-        )}
-      </span>
-
-      <div className="min-w-0">
-        <p
-          className={`font-black leading-snug ${
-            compact ? "text-xs" : "text-lg"
+        <span
+          className={`font-semibold leading-relaxed ${
+            compact ? "text-xs" : "text-base"
           }`}
         >
           {label}
-        </p>
-
-        {!compact && (
-          <>
-            <p className="mt-1 text-sm font-semibold">
-              {english}
-            </p>
-
-            {denied && (
-              <p className="mt-2 text-sm">
-                โปรดหลีกเลี่ยงการถ่ายภาพสมาชิกท่านนี้
-              </p>
-            )}
-          </>
-        )}
+        </span>
       </div>
+
+      {!compact && (
+        <p className="mt-2 text-xs font-medium tracking-wide text-slate-500">
+          {english}
+        </p>
+      )}
     </div>
   );
 }
