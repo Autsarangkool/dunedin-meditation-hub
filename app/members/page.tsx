@@ -30,12 +30,13 @@ type Member = {
   profile_photo_url: string | null;
   created_at: string | null;
   is_deleted?: boolean | null;
+  photo_consent?: string | null;
+  application_form_path?: string | null;
 };
 
 type EditingMember = Omit<Member, "age"> & {
   age: number | string | null;
 };
-
 
 export default function MembersPage() {
   const router = useRouter();
@@ -45,6 +46,7 @@ export default function MembersPage() {
   const [editingMember, setEditingMember] = useState<EditingMember | null>(null);
   const [saving, setSaving] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [applicationFile, setApplicationFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,7 +61,7 @@ export default function MembersPage() {
       await loadMembers();
     }
 
-    checkSession();
+    void checkSession();
   }, [router]);
 
   async function loadMembers() {
@@ -82,15 +84,18 @@ export default function MembersPage() {
   }
 
   function startEdit(member: Member, registrationOrder: number) {
+    setApplicationFile(null);
+    setPhotoFile(null);
     setEditingMember({
       ...member,
       code_number:
         member.code_number || createMemberDisplayId(registrationOrder),
     });
-    setPhotoFile(null);
   }
 
   function cancelEdit() {
+    if (saving) return;
+    setApplicationFile(null);
     setEditingMember(null);
     setPhotoFile(null);
   }
@@ -108,11 +113,9 @@ export default function MembersPage() {
 
   function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-
     if (!file || !editingMember) return;
 
     setPhotoFile(file);
-
     setEditingMember({
       ...editingMember,
       profile_photo_url: URL.createObjectURL(file),
@@ -125,8 +128,7 @@ export default function MembersPage() {
     }
 
     const fileExtension = photoFile.name.split(".").pop() || "jpg";
-    const fileName = `member-${Date.now()}.${fileExtension}`;
-    const filePath = `profiles/${fileName}`;
+    const filePath = `profiles/member-${Date.now()}.${fileExtension}`;
 
     const { error } = await supabase.storage
       .from("profile-photos")
@@ -145,14 +147,60 @@ export default function MembersPage() {
   }
 
   async function saveMember() {
-    if (!editingMember) return;
+    if (!editingMember || saving) return;
 
     setSaving(true);
+    let uploadedApplicationPath: string | null = null;
+    let memberSaved = false;
 
     try {
-      const profilePhotoUrl = await uploadProfilePhoto();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
 
-      const { error } = await supabase
+      if (authError || !authData.user || authData.user.is_anonymous) {
+        throw new Error(
+          "กรุณาล็อกอินใหม่ก่อนบันทึก / Please sign in again"
+        );
+      }
+
+      const profilePhotoUrl = await uploadProfilePhoto();
+      let applicationFormPath =
+        editingMember.application_form_path || null;
+
+      if (applicationFile) {
+        const extensions: Record<string, string> = {
+          "image/jpeg": "jpg",
+          "image/png": "png",
+          "image/webp": "webp",
+        };
+        const extension = extensions[applicationFile.type];
+
+        if (
+          !extension ||
+          applicationFile.size > 10 * 1024 * 1024
+        ) {
+          throw new Error(
+            "เลือกภาพ JPG, PNG หรือ WebP ขนาดไม่เกิน 10 MB"
+          );
+        }
+
+        const path =
+          `${editingMember.id}/${crypto.randomUUID()}.${extension}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("member-applications")
+          .upload(path, applicationFile, {
+            upsert: false,
+            contentType: applicationFile.type,
+          });
+
+        if (uploadError) throw uploadError;
+
+        uploadedApplicationPath = path;
+        applicationFormPath = path;
+      }
+
+      const { data: savedMember, error } = await supabase
         .from("members")
         .update({
           code_number: emptyToNull(editingMember.code_number),
@@ -174,16 +222,32 @@ export default function MembersPage() {
           meditation_preference:
             editingMember.meditation_preference || null,
           health_concern: editingMember.health_concern || null,
+          photo_consent: editingMember.photo_consent || null,
+          application_form_path: applicationFormPath,
         })
-        .eq("id", editingMember.id);
+        .eq("id", editingMember.id)
+        .select("id")
+        .single();
 
       if (error) throw error;
+      if (!savedMember) {
+        throw new Error("ไม่พบสมาชิกหรือไม่มีสิทธิ์บันทึกข้อมูล");
+      }
 
+      memberSaved = true;
       alert("บันทึกข้อมูลสมาชิกเรียบร้อย / Member updated");
+
       setEditingMember(null);
       setPhotoFile(null);
+      setApplicationFile(null);
       await loadMembers();
     } catch (error: any) {
+      if (uploadedApplicationPath && !memberSaved) {
+        await supabase.storage
+          .from("member-applications")
+          .remove([uploadedApplicationPath]);
+      }
+
       alert(error?.message || "ไม่สามารถบันทึกข้อมูลได้");
     } finally {
       setSaving(false);
@@ -196,7 +260,6 @@ export default function MembersPage() {
       const secondTime = getRegistrationTimestamp(second.created_at);
 
       if (firstTime !== secondTime) return firstTime - secondTime;
-
       return first.id.localeCompare(second.id);
     });
 
@@ -208,30 +271,28 @@ export default function MembersPage() {
   const filteredMembers = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
-    return members
-      .filter((member) => {
-        const registrationOrder =
-          registrationOrderMap.get(member.id) || 0;
-        const displayMemberId =
-          member.code_number ||
-          createMemberDisplayId(registrationOrder);
+    return members.filter((member) => {
+      const registrationOrder =
+        registrationOrderMap.get(member.id) || 0;
+      const displayMemberId =
+        member.code_number || createMemberDisplayId(registrationOrder);
 
-        if (!keyword) return true;
+      if (!keyword) return true;
 
-        const searchableText = [
-          displayMemberId,
-          member.full_name,
-          member.nickname,
-          member.phone,
-          member.email,
-          member.occupation,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
+      const searchableText = [
+        displayMemberId,
+        member.full_name,
+        member.nickname,
+        member.phone,
+        member.email,
+        member.occupation,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-        return searchableText.includes(keyword);
-      });
+      return searchableText.includes(keyword);
+    });
   }, [members, registrationOrderMap, search]);
 
   return (
@@ -253,11 +314,9 @@ export default function MembersPage() {
               <TopButton href="/" tone="blue">
                 🏠 กลับหน้าหลัก
               </TopButton>
-
               <TopButton href="/members/pdf" target="_blank" tone="sky">
                 📄 Export PDF
               </TopButton>
-
               <TopButton href="/members/trash" tone="rose">
                 🗑️ Recycle Bin
               </TopButton>
@@ -268,15 +327,12 @@ export default function MembersPage() {
                 <p className="inline-flex rounded-full border border-sky-100 bg-white/80 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-sky-600 shadow-sm backdrop-blur">
                   ❄️ Member Directory
                 </p>
-
                 <h1 className="winter-title mt-4 text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
                   รายชื่อสมาชิก
                 </h1>
-
                 <p className="mt-2 text-xl font-black text-sky-700">
                   Members List
                 </p>
-
                 <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-600 sm:text-base">
                   เรียงตาม Member ID จากน้อยไปมาก
                   โดยสมาชิกที่สมัครภายหลังจะแสดงอยู่ด้านล่าง
@@ -285,7 +341,11 @@ export default function MembersPage() {
             </div>
 
             <div className="mt-7 grid max-w-3xl gap-3 sm:grid-cols-2">
-              <MiniStat label="สมาชิกทั้งหมด" value={members.length} icon="👥" />
+              <MiniStat
+                label="สมาชิกทั้งหมด"
+                value={members.length}
+                icon="👥"
+              />
               <MiniStat
                 label="ผลการค้นหา"
                 value={filteredMembers.length}
@@ -296,18 +356,17 @@ export default function MembersPage() {
             <div className="mt-7 max-w-4xl">
               <div className="relative overflow-hidden rounded-[1.6rem] border border-sky-200/80 bg-white/86 p-2 shadow-[0_16px_42px_rgba(14,165,233,0.13)] backdrop-blur transition focus-within:-translate-y-0.5 focus-within:border-sky-400 focus-within:shadow-[0_20px_55px_rgba(14,165,233,0.20)]">
                 <div className="pointer-events-none absolute -left-8 -top-8 h-28 w-28 rounded-full bg-cyan-200/45 blur-2xl" />
+
                 <div className="relative flex items-center gap-3">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-100 via-cyan-50 to-emerald-100 text-xl shadow-sm">
                     🔎
                   </div>
-
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="ค้นหา Member ID ชื่อ ชื่อเล่น เบอร์โทร หรืออีเมล..."
                     className="h-14 min-w-0 flex-1 bg-transparent px-1 text-base font-bold text-slate-800 outline-none placeholder:font-medium placeholder:text-slate-400"
                   />
-
                   {search && (
                     <button
                       type="button"
@@ -327,7 +386,9 @@ export default function MembersPage() {
         {loading ? (
           <div className="mt-8 rounded-[2rem] border border-sky-100 bg-white/75 px-6 py-14 text-center shadow-lg backdrop-blur-xl">
             <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-sky-100 border-t-sky-500" />
-            <p className="mt-4 font-bold text-slate-500">Loading members...</p>
+            <p className="mt-4 font-bold text-slate-500">
+              Loading members...
+            </p>
           </div>
         ) : (
           <>
@@ -371,6 +432,8 @@ export default function MembersPage() {
             onSave={saveMember}
             onPhotoChange={handlePhotoChange}
             onFieldChange={updateEditField}
+            applicationFile={applicationFile}
+            onApplicationChange={setApplicationFile}
           />
         )}
       </div>
@@ -389,7 +452,6 @@ function MembersBackground() {
         <div className="absolute left-[16%] top-[-140px] h-[480px] w-[590px] rounded-full bg-cyan-200/34 blur-3xl" />
         <div className="absolute -left-28 bottom-10 h-[520px] w-[520px] rounded-full bg-blue-100/55 blur-3xl" />
         <div className="absolute bottom-[-160px] right-[20%] h-[540px] w-[540px] rounded-full bg-emerald-100/45 blur-3xl" />
-
         <div className="absolute right-12 top-28 text-6xl opacity-20">❄️</div>
         <div className="absolute left-[12%] bottom-28 text-6xl opacity-16">🌲</div>
         <div className="absolute right-[20%] bottom-20 text-5xl opacity-16">☃️</div>
@@ -468,7 +530,6 @@ function MembersWinterIllustration() {
         <path d="M63 250 84 207l21 43Z" />
         <path d="M70 228 84 195l15 33Z" />
         <rect x="81" y="247" width="6" height="20" rx="3" />
-
         <path d="M180 265 202 219l22 46Z" />
         <path d="M187 241 202 206l15 35Z" />
         <rect x="199" y="262" width="6" height="20" rx="3" />
@@ -516,7 +577,6 @@ function MemberCard({
         <div className="flex min-w-0 items-center gap-4">
           <div className="relative shrink-0">
             <MemberAvatar member={member} />
-
             <span className="absolute -bottom-2 -right-2 inline-flex min-h-8 min-w-8 items-center justify-center rounded-full border-2 border-white bg-gradient-to-r from-blue-500 to-sky-500 px-2 text-[11px] font-black text-white shadow-md">
               #{registrationOrder || "-"}
             </span>
@@ -527,7 +587,6 @@ function MemberCard({
               <span className="rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-sky-700">
                 🪪 {memberId}
               </span>
-
               <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
                 สมาชิกคนที่ {registrationOrder || "-"}
               </span>
@@ -536,14 +595,34 @@ function MemberCard({
             <h3 className="mt-3 truncate text-2xl font-black tracking-tight text-slate-950">
               {member.full_name || "-"}
             </h3>
-
             <p className="mt-1 truncate text-sm font-bold text-sky-600">
               {member.nickname || "Member"}
             </p>
-
             <p className="mt-2 text-xs font-semibold text-slate-500">
               สมัครเมื่อ {formatRegistrationDate(member.created_at)}
             </p>
+
+            <p
+              className={`mt-2 text-sm font-bold ${
+                member.photo_consent === "denied"
+                  ? "text-red-700"
+                  : member.photo_consent === "allowed"
+                    ? "text-emerald-700"
+                    : "text-slate-500"
+              }`}
+            >
+              {member.photo_consent === "allowed"
+                ? "อนุญาตถ่ายภาพ / Photo allowed"
+                : member.photo_consent === "denied"
+                  ? "ไม่อนุญาตถ่ายภาพ / No photos"
+                  : "การถ่ายภาพ: ยังไม่ได้ระบุ"}
+            </p>
+
+            {member.application_form_path && (
+              <p className="mt-1 text-xs text-slate-500">
+                แนบใบสมัครแล้ว / Application attached
+              </p>
+            )}
           </div>
         </div>
 
@@ -569,7 +648,6 @@ function MemberCard({
           >
             ดูข้อมูล
           </Link>
-
           <button
             type="button"
             onClick={onEdit}
@@ -638,12 +716,10 @@ function MiniStat({
   return (
     <div className="relative overflow-hidden rounded-[1.4rem] border border-sky-100/90 bg-white/78 p-4 shadow-sm backdrop-blur">
       <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-cyan-100 blur-2xl" />
-
       <div className="relative flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-sky-50 to-emerald-50 text-xl shadow-inner ring-1 ring-sky-100">
           {icon}
         </div>
-
         <div>
           <p className="text-xs font-bold text-slate-500">{label}</p>
           <p className="mt-0.5 text-3xl font-black text-sky-700">
@@ -691,6 +767,8 @@ function EditMemberModal({
   onSave,
   onPhotoChange,
   onFieldChange,
+  applicationFile,
+  onApplicationChange,
 }: {
   editingMember: EditingMember;
   saving: boolean;
@@ -698,6 +776,8 @@ function EditMemberModal({
   onSave: () => void;
   onPhotoChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onFieldChange: (field: string, value: string) => void;
+  applicationFile: File | null;
+  onApplicationChange: (file: File | null) => void;
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 backdrop-blur-md sm:p-5">
@@ -711,11 +791,9 @@ function EditMemberModal({
               <p className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-sky-700">
                 ❄️ Edit Member
               </p>
-
               <h2 className="winter-title mt-4 text-3xl font-black">
                 แก้ไขข้อมูลสมาชิก
               </h2>
-
               <p className="mt-2 text-sm font-medium text-slate-500">
                 Edit profile, contact details, preferences and health notes.
               </p>
@@ -724,15 +802,17 @@ function EditMemberModal({
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 shadow-sm transition hover:bg-slate-50"
+              disabled={saving}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
             >
               ✕ ปิด
             </button>
           </div>
 
           <div className="mt-6 rounded-[1.75rem] border border-sky-100 bg-gradient-to-br from-white via-sky-50/60 to-emerald-50/50 p-5 shadow-sm">
-            <label className="font-black text-sky-900">Profile Photo</label>
-
+            <label className="font-black text-sky-900">
+              Profile Photo
+            </label>
             <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-inner ring-4 ring-white">
                 {editingMember.profile_photo_url ? (
@@ -745,17 +825,17 @@ function EditMemberModal({
                   <span className="text-5xl">🙏</span>
                 )}
               </div>
-
               <input
                 type="file"
                 accept="image/*"
                 onChange={onPhotoChange}
+                disabled={saving}
                 className="w-full rounded-2xl border border-sky-100 bg-white/85 p-3 text-sm font-medium text-slate-600 shadow-sm file:mr-4 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-blue-500 file:to-sky-500 file:px-4 file:py-2 file:font-black file:text-white hover:file:brightness-105"
               />
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <fieldset disabled={saving} className="mt-6 grid gap-4 md:grid-cols-2">
             <EditInput
               value={editingMember.code_number || ""}
               onChange={(value) => onFieldChange("code_number", value)}
@@ -769,7 +849,6 @@ function EditMemberModal({
               >
                 วันที่สมัคร / Registered
               </label>
-
               <input
                 id="created_at"
                 type="datetime-local"
@@ -787,7 +866,6 @@ function EditMemberModal({
                 }
                 className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-3 py-2 font-bold text-slate-700 outline-none shadow-sm transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
               />
-
               <p className="mt-2 text-xs font-semibold text-slate-500">
                 เวลา Dunedin / Pacific/Auckland
               </p>
@@ -798,13 +876,11 @@ function EditMemberModal({
               onChange={(value) => onFieldChange("full_name", value)}
               placeholder="ชื่อ - นามสกุล / Full Name"
             />
-
             <EditInput
               value={editingMember.nickname || ""}
               onChange={(value) => onFieldChange("nickname", value)}
               placeholder="ชื่อเล่น / Nickname"
             />
-
             <EditSelect
               value={editingMember.gender || ""}
               onChange={(value) => onFieldChange("gender", value)}
@@ -815,32 +891,27 @@ function EditMemberModal({
                 ["other", "อื่น ๆ / Other"],
               ]}
             />
-
             <EditInput
               value={editingMember.age || ""}
               onChange={(value) => onFieldChange("age", value)}
               type="number"
               placeholder="อายุ / Age"
             />
-
             <EditInput
               value={editingMember.phone || ""}
               onChange={(value) => onFieldChange("phone", value)}
               placeholder="เบอร์โทร / Phone"
             />
-
             <EditInput
               value={editingMember.email || ""}
               onChange={(value) => onFieldChange("email", value)}
               placeholder="อีเมล / Email"
             />
-
             <EditInput
               value={editingMember.line_id || ""}
               onChange={(value) => onFieldChange("line_id", value)}
               placeholder="Line ID"
             />
-
             <EditInput
               value={editingMember.occupation || ""}
               onChange={(value) => onFieldChange("occupation", value)}
@@ -858,7 +929,6 @@ function EditMemberModal({
                 ["other", "อื่น ๆ / Other"],
               ]}
             />
-
             <EditSelect
               value={editingMember.sitting_preference || ""}
               onChange={(value) =>
@@ -870,7 +940,6 @@ function EditMemberModal({
                 ["chair", "นั่งเก้าอี้ / Chair Sitting"],
               ]}
             />
-
             <EditSelect
               value={editingMember.meditation_preference || ""}
               onChange={(value) =>
@@ -883,15 +952,11 @@ function EditMemberModal({
                 ["visualization", "การนึกภาพ / Visualization"],
                 ["reduce_stress", "ลดความเครียด / Reduce Stress"],
                 ["mental_charity", "เมตตาภาวนา / Mental Charity"],
-                [
-                  "walking_meditation",
-                  "เดินจงกรม / Walking Meditation",
-                ],
+                ["walking_meditation", "เดินจงกรม / Walking Meditation"],
                 ["happiness", "ความสุข / Happiness"],
                 ["other", "อื่น ๆ / Other"],
               ]}
             />
-
             <EditSelect
               value={editingMember.health_concern || ""}
               onChange={(value) => onFieldChange("health_concern", value)}
@@ -913,22 +978,54 @@ function EditMemberModal({
               placeholder="ที่อยู่ / Address"
               rows={3}
             />
-          </div>
+          </fieldset>
+
+          <section className="mt-6 rounded-2xl border border-sky-100 bg-white p-5">
+            <label
+              htmlFor="photo-consent"
+              className="block font-bold text-slate-800"
+            >
+              การอนุญาตถ่ายภาพ / Photo consent
+            </label>
+            <select
+              id="photo-consent"
+              disabled={saving}
+              value={editingMember.photo_consent || ""}
+              onChange={(event) =>
+                onFieldChange("photo_consent", event.target.value)
+              }
+              className="mt-3 w-full rounded-xl border border-slate-200 bg-white p-3"
+            >
+              <option value="">ยังไม่ได้ระบุ / Not recorded</option>
+              <option value="allowed">อนุญาตถ่ายภาพ / Allowed</option>
+              <option value="denied">ไม่อนุญาตถ่ายภาพ / Not allowed</option>
+            </select>
+            <p className="mt-2 text-sm text-slate-500">
+              ระบุตามความยินยอมในใบสมัครของสมาชิก
+            </p>
+          </section>
+
+          <ApplicationFormAttachment
+            path={editingMember.application_form_path || null}
+            file={applicationFile}
+            onChange={onApplicationChange}
+            disabled={saving}
+          />
 
           <div className="mt-7 flex flex-col justify-end gap-3 sm:flex-row">
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-2xl border border-slate-200 bg-white px-5 py-3 font-black text-slate-600 shadow-sm transition hover:bg-slate-50"
+              disabled={saving}
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-3 font-black text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
             >
               ยกเลิก / Cancel
             </button>
-
             <button
               type="button"
               onClick={onSave}
               disabled={saving}
-              className="winter-button px-7"
+              className="winter-button px-7 disabled:opacity-50"
             >
               {saving ? "กำลังบันทึก..." : "บันทึก / Save"}
             </button>
@@ -936,6 +1033,159 @@ function EditMemberModal({
         </div>
       </div>
     </div>
+  );
+}
+
+function ApplicationFormAttachment({
+  path,
+  file,
+  onChange,
+  disabled,
+}: {
+  path: string | null;
+  file: File | null;
+  onChange: (file: File | null) => void;
+  disabled: boolean;
+}) {
+  const [preview, setPreview] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [retry, setRetry] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl = "";
+
+    setPreview("");
+    setError("");
+    setLoading(Boolean(file || path));
+
+    async function load() {
+      try {
+        if (file) {
+          objectUrl = URL.createObjectURL(file);
+        } else if (path) {
+          const { data, error: downloadError } = await supabase.storage
+            .from("member-applications")
+            .download(path);
+
+          if (downloadError) throw downloadError;
+          if (!active) return;
+
+          objectUrl = URL.createObjectURL(data);
+        }
+
+        if (active) setPreview(objectUrl);
+      } catch (cause: any) {
+        if (active) {
+          setError(cause?.message || "ไม่สามารถเปิดภาพใบสมัครได้");
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void load();
+
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [file, path, retry]);
+
+  function chooseFile(event: ChangeEvent<HTMLInputElement>) {
+    const selected = event.target.files?.[0];
+    if (!selected) return;
+
+    if (
+      !["image/jpeg", "image/png", "image/webp"].includes(selected.type) ||
+      selected.size > 10 * 1024 * 1024
+    ) {
+      alert("เลือกภาพ JPG, PNG หรือ WebP ขนาดไม่เกิน 10 MB");
+      event.target.value = "";
+      return;
+    }
+
+    onChange(selected);
+    event.target.value = "";
+  }
+
+  return (
+    <section className="mt-6 rounded-2xl border border-sky-100 bg-white p-5">
+      <label
+        htmlFor="application-form"
+        className="block font-bold text-slate-800"
+      >
+        ภาพใบสมัคร / Registration form
+      </label>
+      <p className="mt-2 text-sm text-slate-500">
+        JPG, PNG หรือ WebP ไม่เกิน 10 MB · คนละ 1 ภาพ ·
+        เปิดดูผ่านบัญชีผู้ดูแลที่ล็อกอิน
+      </p>
+      <input
+        id="application-form"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        disabled={disabled}
+        className="mt-3 w-full rounded-xl border border-slate-200 p-3"
+        onChange={chooseFile}
+      />
+
+      {file && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+          <span className="break-all">
+            ภาพที่เลือก: {file.name} — กดบันทึกเพื่ออัปโหลด
+          </span>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(null)}
+            className="rounded-lg border px-3 py-2"
+          >
+            ยกเลิกภาพที่เลือก
+          </button>
+        </div>
+      )}
+
+      {loading && <p className="mt-3 text-sm">กำลังเปิดภาพ...</p>}
+
+      {error && (
+        <div className="mt-3 text-sm text-red-700">
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => setRetry((value) => value + 1)}
+            className="mt-2 rounded-lg border px-3 py-2"
+          >
+            ลองเปิดอีกครั้ง
+          </button>
+        </div>
+      )}
+
+      {preview && (
+        <div className="mt-4">
+          <img
+            src={preview}
+            alt="ภาพใบสมัครสมาชิก"
+            className="max-h-96 w-full rounded-xl border object-contain"
+          />
+          <a
+            href={preview}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-block rounded-xl border px-4 py-2 font-bold text-sky-700"
+          >
+            เปิดภาพขนาดเต็ม / View full size
+          </a>
+        </div>
+      )}
+
+      {!path && !file && (
+        <p className="mt-3 text-sm text-slate-500">
+          ยังไม่ได้แนบภาพใบสมัคร
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -985,10 +1235,8 @@ function EditSelect({
   );
 }
 
-
 function emptyToNull(value: string | null | undefined) {
   const text = String(value || "").trim();
-
   return text || null;
 }
 
@@ -998,9 +1246,7 @@ function createMemberDisplayId(registrationOrder: number) {
 
 function getRegistrationTimestamp(value?: string | null) {
   if (!value) return Number.MAX_SAFE_INTEGER;
-
   const timestamp = new Date(value).getTime();
-
   return Number.isNaN(timestamp) ? Number.MAX_SAFE_INTEGER : timestamp;
 }
 
@@ -1036,9 +1282,7 @@ function getAucklandDateTimeParts(date: Date) {
 
 function toAucklandDateTimeLocalValue(value?: string | null) {
   if (!value) return "";
-
   const date = new Date(value);
-
   if (Number.isNaN(date.getTime())) return "";
 
   const parts = getAucklandDateTimeParts(date);
@@ -1068,7 +1312,6 @@ function aucklandDateTimeLocalToIso(value: string) {
 
   let candidate = targetAsUtc;
 
-  // ปรับซ้ำเพื่อให้รองรับการเปลี่ยนเวลา Daylight Saving ของนิวซีแลนด์
   for (let index = 0; index < 3; index += 1) {
     const parts = getAucklandDateTimeParts(new Date(candidate));
     const representedAsUtc = Date.UTC(
@@ -1079,7 +1322,6 @@ function aucklandDateTimeLocalToIso(value: string) {
       parts.minute,
       0
     );
-
     candidate += targetAsUtc - representedAsUtc;
   }
 
@@ -1088,9 +1330,7 @@ function aucklandDateTimeLocalToIso(value: string) {
 
 function formatRegistrationDate(value?: string | null) {
   if (!value) return "-";
-
   const date = new Date(value);
-
   if (Number.isNaN(date.getTime())) return "-";
 
   return new Intl.DateTimeFormat("th-TH-u-ca-gregory", {
