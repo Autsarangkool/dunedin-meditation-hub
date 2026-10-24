@@ -289,7 +289,10 @@ export default function CheckinPage() {
 
     if (!confirmDelete) return;
 
-    const { error } = await supabase.from("checkins").delete().eq("id", checkinId);
+    const { error } = await supabase
+      .from("checkins")
+      .delete()
+      .eq("id", checkinId);
 
     if (error) {
       alert(error.message);
@@ -364,9 +367,6 @@ export default function CheckinPage() {
           <section className="relative overflow-hidden rounded-[2.5rem] border border-emerald-100/90 bg-white/95 p-5 shadow-[0_30px_100px_rgba(16,185,129,0.14)] backdrop-blur-2xl sm:p-8 lg:p-10">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(134,239,172,0.58),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(253,224,71,0.34),transparent_34%),radial-gradient(circle_at_center_left,rgba(125,211,252,0.22),transparent_30%)]" />
             <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-lime-200/55 blur-3xl" />
-            <div className="pointer-events-none absolute right-10 top-20 hidden h-36 w-36 items-center justify-center rounded-full border border-emerald-100 bg-white/50 text-6xl shadow-inner lg:flex">
-              👤
-            </div>
             <div className="pointer-events-none absolute bottom-10 left-8 text-5xl opacity-20">
               🌿
             </div>
@@ -615,6 +615,12 @@ export default function CheckinPage() {
                       )}
                     </p>
 
+                    <div className="mt-5 w-full" aria-live="polite">
+                      <PhotoConsentStatus
+                        value={latestCheckin.members?.photo_consent}
+                      />
+                    </div>
+
                     <div className="my-7 flex w-full items-center gap-3">
                       <div className="h-px flex-1 bg-emerald-100" />
                       <span className="text-xl opacity-50">🌿</span>
@@ -705,7 +711,9 @@ function CheckinBackground() {
         <div className="absolute -left-28 bottom-10 h-[520px] w-[520px] rounded-full bg-yellow-200/38 blur-3xl" />
         <div className="absolute bottom-[-160px] right-[22%] h-[520px] w-[520px] rounded-full bg-lime-200/38 blur-3xl" />
 
-        <div className="absolute right-12 top-28 text-6xl opacity-25">🕊️</div>
+        <div className="absolute right-12 top-28 text-6xl opacity-25">
+          🕊️
+        </div>
         <div className="absolute left-[12%] bottom-28 text-6xl opacity-20">
           🌿
         </div>
@@ -762,7 +770,11 @@ function MemberResultCard({
 
       <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
-          <Avatar src={member.profile_photo_url} name={member.full_name} size="md" />
+          <Avatar
+            src={member.profile_photo_url}
+            name={member.full_name}
+            size="md"
+          />
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
@@ -778,6 +790,10 @@ function MemberResultCard({
             <p className="mt-1 truncate text-sm font-medium text-slate-500">
               {member.nickname || member.phone || member.email || "Member profile"}
             </p>
+
+            <div className="mt-3">
+              <PhotoConsentStatus value={member.photo_consent} compact />
+            </div>
 
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold text-slate-400">
               {member.phone && <span>📞 {member.phone}</span>}
@@ -819,7 +835,11 @@ function RecentCheckinRow({
 
       <div className="relative flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <Avatar src={item.members?.profile_photo_url} name={memberName} size="sm" />
+          <Avatar
+            src={item.members?.profile_photo_url}
+            name={memberName}
+            size="sm"
+          />
 
           <div className="min-w-0">
             <p className="truncate text-sm font-black text-slate-950">
@@ -845,6 +865,13 @@ function RecentCheckinRow({
             Delete
           </button>
         </div>
+      </div>
+
+      <div className="relative mt-3">
+        <PhotoConsentStatus
+          value={item.members?.photo_consent}
+          compact
+        />
       </div>
     </article>
   );
@@ -901,6 +928,113 @@ function WaitingCard() {
         <p className="mt-2 text-sm text-slate-500">
           เมื่อเช็คอินสำเร็จ สมาชิกคนล่าสุดจะแสดงตรงนี้
         </p>
+      </div>
+    </div>
+  );
+}
+
+function PhotoConsentStatus({
+  value,
+  compact = false,
+}: {
+  value?: string | null;
+  compact?: boolean;
+}) {
+  const allowed = value === "allowed";
+  const denied = value === "denied";
+
+  const label = allowed
+    ? "อนุญาตให้ถ่ายภาพ"
+    : denied
+      ? "ไม่อนุญาตให้ถ่ายภาพ"
+      : "ยังไม่ระบุการอนุญาตถ่ายภาพ";
+
+  const english = allowed
+    ? "Photography permitted"
+    : denied
+      ? "No photography"
+      : "Please ask before taking photos";
+
+  const colorClass = allowed
+    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+    : denied
+      ? "border-red-300 bg-red-50 text-red-800"
+      : "border-amber-200 bg-amber-50 text-amber-800";
+
+  return (
+    <div
+      className={`${
+        compact
+          ? "inline-flex max-w-full gap-2 rounded-xl px-3 py-2 text-left"
+          : "flex w-full gap-3 rounded-2xl px-4 py-4 text-left"
+      } items-center border ${colorClass}`}
+    >
+      <span
+        aria-hidden="true"
+        className={`flex shrink-0 items-center justify-center ${
+          compact ? "h-7 w-7" : "h-11 w-11"
+        }`}
+      >
+        {allowed || denied ? (
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-full w-full"
+          >
+            <path d="M14.5 4h-5L7.5 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.5Z" />
+            <circle cx="12" cy="13.5" r="3.5" />
+
+            {denied && (
+              <path d="M2 2 22 22" strokeWidth="2.5" />
+            )}
+
+            {allowed && (
+              <path d="m16 3 2 2 4-4" strokeWidth="2.2" />
+            )}
+          </svg>
+        ) : (
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-full w-full"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9.5 9a2.5 2.5 0 0 1 5 .5c0 1.5-2.5 2-2.5 3.5" />
+            <path d="M12 17h.01" />
+          </svg>
+        )}
+      </span>
+
+      <div className="min-w-0">
+        <p
+          className={`font-black leading-snug ${
+            compact ? "text-xs" : "text-lg"
+          }`}
+        >
+          {label}
+        </p>
+
+        {!compact && (
+          <>
+            <p className="mt-1 text-sm font-semibold">
+              {english}
+            </p>
+
+            {denied && (
+              <p className="mt-2 text-sm">
+                โปรดหลีกเลี่ยงการถ่ายภาพสมาชิกท่านนี้
+              </p>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
